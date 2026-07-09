@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adult CCRN Study Hub</title>
+<script src="firebase-config.js"></script>
+<style>
+  :root{
+    --bg:#f7faf8;
+    --panel:rgba(255,255,255,.9);
+    --panel-2:#ffffff;
+    --line:#dce9e5;
+    --line-strong:#bfd5d0;
+    --ink:#163b37;
+    --ink-soft:#667b77;
+    --ink-dim:#8aa09c;
+    --teal:#25847c;
+    --teal-deep:#17625c;
+    --teal-soft:#e4f2f0;
+    --amber:#c98b2b;
+    --amber-soft:#fbefd8;
+    --coral:#d96c61;
+    --coral-soft:#fae8e5;
+    --plum:#725489;
+    --plum-soft:#f0e8f5;
+    --good:#25847c;
+    --radius:12px;
+    --shadow:0 8px 26px rgba(22,59,55,.08);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(circle at top left,#e5f3f1,transparent 34rem),var(--bg);
+    color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:15px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:22px 18px 90px}
+  h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em}
+  a{color:var(--teal)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;margin-bottom:18px;
+  }
+  .brand .kicker{
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--teal-deep);font-weight:800;
+  }
+  .brand h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,5vw,42px);line-height:1.08;margin-top:2px;font-weight:650}
+  .brand .sub{color:var(--ink-soft);font-size:14px;margin-top:4px}
+  .plan-note{
+    font-size:12px;color:var(--ink-dim);border-left:2px solid var(--line);
+    padding-left:10px;max-width:300px;
+  }
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 22px;
+    padding:0;border-radius:0;position:sticky;top:8px;z-index:20;
+    backdrop-filter:blur(6px);}
+  .tab{
+    appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    font:inherit;font-weight:800;font-size:13px;padding:8px 13px;border-radius:999px;
+    cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .tab:hover{color:var(--teal-deep);background:var(--teal-soft)}
+  .tab.active{background:var(--teal-soft);border-color:var(--teal);color:var(--teal-deep)}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .grid{display:grid;gap:14px}
+  .muted{color:var(--ink-soft)}
+  .dim{color:var(--ink-dim)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;
+    padding:3px 9px;border-radius:999px;text-transform:uppercase}
+  .pill.hy{background:var(--amber-soft);color:#8a5b12}
+  .pill.tealp{background:var(--teal-soft);color:var(--teal-deep)}
+  .pill.plump{background:var(--plum-soft);color:var(--plum)}
+
+  /* ---------- blueprint ---------- */
+  .setup{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .setup label{font-size:13px;color:var(--ink-soft);font-weight:600}
+  .setup input[type=number]{
+    width:90px;background:#fff;color:var(--ink);border:1px solid var(--line);
+    border-radius:9px;padding:9px 11px;font:inherit;font-weight:700;font-size:16px;
+  }
+  .setup .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .setup .seg button{background:#fff;border:0;color:var(--ink-soft);font:inherit;
+    font-weight:600;padding:9px 12px;cursor:pointer;border-right:1px solid var(--line)}
+  .setup .seg button:last-child{border-right:0}
+  .setup .seg button.on{background:var(--teal-soft);color:var(--teal-deep)}
+  .bp-total{margin-left:auto;text-align:right}
+  .bp-total .n{font-size:26px;font-weight:800;color:var(--teal);letter-spacing:-.03em}
+  .bp-total .l{font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.12em}
+
+  .bar-row{display:grid;grid-template-columns:210px 1fr 128px;align-items:center;
+    gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .bar-row:last-child{border-bottom:0}
+  .bar-name{font-weight:700;font-size:14px}
+  .bar-name small{display:block;color:var(--ink-dim);font-weight:500;font-size:11.5px;margin-top:2px}
+  .bar-track{height:12px;background:#fff;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal-deep),var(--teal))}
+  .bar-fill.pc{background:linear-gradient(90deg,#7d5290,var(--plum))}
+  .bar-meta{text-align:right;font-size:13px}
+  .bar-meta b{font-size:16px}
+  .bar-meta small{color:var(--ink-dim)}
+
+  /* ---------- library ---------- */
+  .sys-head{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+  .sys-head .chev{color:var(--ink-dim);transition:.2s;font-size:13px}
+  .sys-head.open .chev{transform:rotate(90deg)}
+  .sys-title{font-size:17px;font-weight:700}
+  .sys-pct{margin-left:auto;font-size:13px;color:var(--ink-soft)}
+  .sys-body{display:none;margin-top:14px}
+  .sys-body.open{display:block}
+  .sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px}
+  .sub{
+    display:flex;align-items:center;gap:9px;background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;
+    transition:.15s;font-size:13.5px;font-weight:600;text-align:left;
+  }
+  .sub:hover{border-color:var(--teal);color:var(--ink);transform:translateY(-1px)}
+  .sub .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+  .sub.has .dot{background:var(--teal)}
+  .sub.done .dot{background:var(--good)}
+  .sub .nm{flex:1}
+  .sub .star{color:var(--amber);font-size:12px;flex:none}
+
+  /* ---------- reader ---------- */
+  .reader-head{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  .reader-head h2{font-size:23px}
+  .backbtn{background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+    font:inherit;font-weight:600;padding:8px 13px;border-radius:9px;cursor:pointer}
+  .backbtn:hover{color:var(--ink);border-color:var(--teal)}
+  .content h3{font-size:15px;color:var(--teal);margin:20px 0 7px;letter-spacing:.01em;
+    text-transform:uppercase;font-size:12.5px;letter-spacing:.14em}
+  .content p{margin:0 0 10px;color:var(--ink)}
+  .content ul{margin:4px 0 12px;padding-left:20px}
+  .content li{margin:5px 0}
+  .content .key{background:var(--amber-soft);border-left:3px solid var(--amber);
+    padding:11px 14px;border-radius:0 9px 9px 0;margin:12px 0}
+  .content .key b{color:var(--amber)}
+  .content .warn{background:var(--coral-soft);border-left:3px solid var(--coral);
+    padding:11px 14px;border-radius:0 9px 9px 0;margin:12px 0}
+  .content .warn b{color:var(--coral)}
+  .content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  .content th,.content td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  .content th{background:var(--teal-soft);color:var(--teal-deep);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em}
+  .checkrow{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+  .chk{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
+  .chk input{accent-color:var(--teal);width:15px;height:15px}
+  .chk.on{color:var(--good);border-color:var(--good)}
+  .empty-note{background:#fff;border:1px dashed var(--line-strong);border-radius:10px;
+    padding:16px;color:var(--ink-soft);font-size:14px}
+  .empty-note b{color:var(--teal)}
+
+  /* ---------- quiz ---------- */
+  .quiz-setup .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0}
+  .chip{background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+    font:inherit;font-weight:600;font-size:13px;padding:8px 13px;border-radius:999px;cursor:pointer}
+  .chip.on{background:var(--teal-soft);color:var(--teal-deep);border-color:var(--teal)}
+  .startbtn{background:var(--teal);color:#fff;border:0;font:inherit;font-weight:800;
+    font-size:15px;padding:12px 22px;border-radius:11px;cursor:pointer;margin-top:6px}
+  .startbtn:hover{filter:brightness(1.06)}
+  .q-progress{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .q-progress .track{flex:1;height:7px;background:#fff;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .q-progress .fill{height:100%;background:var(--teal)}
+  .q-progress .lbl{font-size:12.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap}
+  .q-sys{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a5b12;font-weight:700}
+  .q-stem{font-size:16px;font-weight:600;margin:6px 0 16px;line-height:1.5}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
+    color:var(--ink);font:inherit;font-size:14.5px;padding:13px 15px;border-radius:11px;
+    margin-bottom:9px;cursor:pointer;transition:.13s}
+  .opt:hover:not(:disabled){border-color:var(--teal)}
+  .opt .ltr{display:inline-block;width:22px;font-weight:800;color:var(--ink-dim)}
+  .opt.correct{border-color:var(--good);background:rgba(95,191,143,.12)}
+  .opt.correct .ltr{color:var(--good)}
+  .opt.wrong{border-color:var(--coral);background:var(--coral-soft)}
+  .opt.wrong .ltr{color:var(--coral)}
+  .opt:disabled{cursor:default}
+  .rationale{background:#fff;border:1px solid var(--line);border-radius:11px;
+    padding:14px 16px;margin-top:6px;font-size:14px;display:none}
+  .rationale.show{display:block;animation:fade .2s}
+  .rationale .verdict{font-weight:800;margin-bottom:5px}
+  .rationale .verdict.ok{color:var(--good)}
+  .rationale .verdict.no{color:var(--coral)}
+  .nextbtn{background:var(--teal);color:#fff;border:0;font:inherit;font-weight:800;
+    font-size:15px;padding:12px 24px;border-radius:11px;cursor:pointer;margin-top:14px}
+  .results{text-align:center;padding:14px}
+  .results .score{font-size:56px;font-weight:800;letter-spacing:-.04em;line-height:1}
+  .results .score.pass{color:var(--good)}
+  .results .score.near{color:var(--amber)}
+  .results .score.low{color:var(--coral)}
+  .results .sub{color:var(--ink-soft);margin-top:6px}
+  .results .breakdown{text-align:left;max-width:440px;margin:22px auto 0}
+  .results .brk{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .results .brk b{font-weight:700}
+
+  .section-title{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-dim);font-weight:700;margin:26px 0 12px}
+  .hero{
+    display:block;margin-bottom:18px;
+  }
+  .hero-main{padding:0;background:transparent;border:0;box-shadow:none}
+  .hero-main h2{font-size:27px;line-height:1.15;margin:5px 0 9px}
+  .hero-main p{margin:0;color:var(--ink-soft);font-size:14px;max-width:740px}
+  .quick-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:16px}
+  .quick-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .quick-card b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+  .quick-card span{display:block;color:var(--ink-dim);font-size:12px;line-height:1.35}
+  .media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:12px 0 16px}
+  .media-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .media-card .tag{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);font-weight:800}
+  .media-card a{display:block;margin-top:4px;font-weight:700;text-decoration:none;color:var(--ink)}
+  .media-card p{margin:5px 0 0;color:var(--ink-dim);font-size:12.5px;line-height:1.35}
+  .study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0 14px}
+  .study-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden}
+  .study-box[open]{border-color:var(--teal);box-shadow:0 0 0 3px rgba(37,132,124,.09)}
+  .study-box summary{list-style:none;cursor:pointer;padding:12px}
+  .study-box summary::-webkit-details-marker{display:none}
+  .study-box b{color:var(--teal-deep);display:block;font-size:12.5px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+  .study-box span{color:var(--ink-soft);font-size:13px}
+  .study-box p{border-top:1px solid var(--line);padding:12px;margin:0;color:var(--ink);font-size:13.5px}
+  .study-page p{border-top:0;padding:0 12px 12px;line-height:1.58}
+  .study-page p:first-child{border-top:1px solid var(--line);padding-top:12px}
+  .deep-dive-note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);
+    border-radius:10px;padding:13px 15px;margin:14px 0;color:var(--ink-soft);font-size:13.5px}
+  .topic-scan{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0 16px}
+  .scan-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .scan-card b{display:block;color:var(--teal-deep);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+  .scan-card span{display:block;color:var(--ink-soft);font-size:13px;line-height:1.4}
+  .study-stack{display:grid;gap:12px;margin:12px 0}
+  .study-section{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+  .study-section h4{margin:0 0 8px;font-size:14px;color:var(--ink);letter-spacing:0}
+  .study-list{margin:0;padding-left:19px;color:var(--ink);line-height:1.48}
+  .study-list li{margin:7px 0}
+  .study-list b{color:var(--teal-deep)}
+  .panel-list{margin:0;padding:12px 14px 14px 31px;border-top:1px solid var(--line);line-height:1.5}
+  .panel-list li{margin:8px 0;color:var(--ink)}
+  .panel-list b{color:var(--teal-deep)}
+  .notes-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0 16px}
+  .notes-box textarea{width:100%;min-height:150px;resize:vertical;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--ink);padding:11px;font:inherit;outline:none}
+  .notes-box textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(37,132,124,.14)}
+  .notes-box .save-line{display:flex;justify-content:space-between;gap:10px;align-items:center;
+    color:var(--ink-dim);font-size:12.5px;margin-top:7px}
+  .exam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:14px}
+  .exam-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+  .exam-card b{display:block;margin-bottom:4px}
+  .exam-card p{margin:0;color:var(--ink-dim);font-size:12.5px}
+  .ref-list{display:grid;gap:10px}
+  .ref-item{display:grid;grid-template-columns:110px 1fr;gap:12px;background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:12px}
+  .ref-item b{color:var(--teal);font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+  .ref-item a{font-weight:700;text-decoration:none}
+  .ref-item p{margin:4px 0 0;color:var(--ink-dim);font-size:12.5px}
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+  .kpi .n{font-size:28px;font-weight:800;letter-spacing:-.03em}
+  .kpi .l{font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+  .foot{margin-top:32px;text-align:center;color:var(--ink-dim);font-size:12px}
+  @media(max-width:640px){
+    .hero{grid-template-columns:1fr}
+    .hero-main h2{font-size:22px}
+    .ref-item{grid-template-columns:1fr}
+    .bar-row{grid-template-columns:1fr;gap:6px}
+    .bar-meta{text-align:left}
+    .brand h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="kicker">Adult CCRN &middot; Direct Care</div>
+      <h1>CCRN Study Hub</h1>
+      <div class="sub">Built on the current AACN test plan &mdash; exams on/after Nov 12, 2025</div>
+    </div>
+    <div class="plan-note">
+      Topic weightings and subtopics pulled from the official AACN Adult CCRN Exam Handbook and cross-referenced with your Notion library.
+      <br><b id="syncStatus">Saved on this device</b>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-view="blueprint">Study Blueprint</button>
+    <button class="tab" data-view="library">Topic Library</button>
+    <button class="tab" data-view="visuals">Visuals & References</button>
+    <button class="tab" data-view="quiz">Quiz</button>
+    <button class="tab" data-view="progress">Progress</button>
+  </div>
+
+  <!-- ================= BLUEPRINT ================= -->
+  <div class="view active" id="view-blueprint">
+    <div class="hero">
+      <div class="card hero-main">
+        <span class="pill hy">Barron's-style study build</span>
+        <h2>Turn the 300-page review book into daily ICU-ready study blocks.</h2>
+        <p>This version adds system summaries, bedside decision traps, visual/video prompts, source references, and a deeper study template for every subtopic so the library feels more like a full review course than a checklist.</p>
+        <div class="quick-map">
+          <div class="quick-card"><b>Read</b><span>Patho, assessment, diagnostics, nursing priorities, and exam traps.</span></div>
+          <div class="quick-card"><b>See</b><span>Open matching diagrams, ECGs, ventilator visuals, and anatomy searches.</span></div>
+          <div class="quick-card"><b>Drill</b><span>Answer scenario questions and send misses to your weak-area list.</span></div>
+          <div class="quick-card"><b>Track</b><span>Check off each topic in the same rhythm you would use with the book.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="setup">
+        <label for="totalHrs">Total study hours</label>
+        <input type="number" id="totalHrs" value="120" min="20" max="500" step="5">
+        <div class="seg" id="weeksSeg">
+          <button data-wk="4">4 wk</button>
+          <button data-wk="6" class="on">6 wk</button>
+          <button data-wk="8">8 wk</button>
+          <button data-wk="12">12 wk</button>
+        </div>
+        <div class="bp-total">
+          <div class="n" id="perWeek">20 h</div>
+          <div class="l">per week &middot; <span id="perDay">~2.9 h/day</span></div>
+        </div>
+      </div>
+      <div id="bpBars"></div>
+      <p class="muted" style="margin:16px 0 0;font-size:13px">
+        Hours are allocated by each domain's share of the exam, then nudged for difficulty density.
+        High-percentage clinical systems get the most time; Professional Caring is a fifth of the exam and easy to under-study &mdash; it's protected here.
+      </p>
+    </div>
+
+    <div class="section-title">How to spend a study block</div>
+    <div class="grid card" style="gap:10px">
+      <p class="muted" style="margin:0">A repeatable loop that fits a night-shift week &mdash; no marathon sessions required:</p>
+      <ul style="margin:2px 0 0;padding-left:20px" class="muted">
+        <li><b style="color:var(--ink)">First 25 min</b> &mdash; read one subtopic in the Topic Library (patho &rarr; assessment &rarr; nursing priorities).</li>
+        <li><b style="color:var(--ink)">Next 15 min</b> &mdash; take a short quiz on that system. Missed questions are the real study material.</li>
+        <li><b style="color:var(--ink)">Last 10 min</b> &mdash; write your weak-area note on the topic page and check off what you covered.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= LIBRARY ================= -->
+  <div class="view" id="view-library">
+    <div id="libraryList" class="grid" style="gap:12px"></div>
+  </div>
+
+  <!-- ================= READER ================= -->
+  <div class="view" id="view-reader">
+    <div class="card">
+      <div class="reader-head">
+        <button class="backbtn" onclick="showView('library')">&larr; Library</button>
+        <h2 id="rdTitle"></h2>
+        <span id="rdPill"></span>
+      </div>
+      <div class="content" id="rdContent"></div>
+    </div>
+  </div>
+
+  <!-- ================= VISUALS / REFERENCES ================= -->
+  <div class="view" id="view-visuals">
+    <div class="card">
+      <h2 style="font-size:19px;margin-bottom:4px">Visuals & reference library</h2>
+      <p class="muted" style="margin:0 0 14px;font-size:14px">Fast links for diagrams, ECG examples, ventilator concepts, and official reference material. Use these beside the Barron's chapter instead of hunting mid-study.</p>
+      <div id="visualLibrary" class="grid" style="gap:14px"></div>
+    </div>
+  </div>
+
+  <!-- ================= QUIZ ================= -->
+  <div class="view" id="view-quiz">
+    <div class="card" id="quizSetup">
+      <h2 style="font-size:19px;margin-bottom:4px">Practice quiz</h2>
+      <p class="muted" style="margin:0 0 14px;font-size:14px">CCRN-format scenario questions with rationales. Pick your systems and length.</p>
+      <div class="quiz-setup">
+        <div class="row" id="quizSysChips"></div>
+        <div class="row" style="margin-top:14px">
+          <span class="muted" style="font-size:13px;font-weight:600;margin-right:4px">Length:</span>
+          <button class="chip len on" data-len="10">10</button>
+          <button class="chip len" data-len="25">25</button>
+          <button class="chip len" data-len="50">50</button>
+          <button class="chip len" data-len="0">All available</button>
+        </div>
+        <button class="startbtn" id="startQuiz">Start quiz</button>
+        <p class="dim" style="font-size:12.5px;margin:12px 0 0" id="qBankNote"></p>
+      </div>
+      <div class="section-title" style="margin-top:24px">Practice exams</div>
+      <div class="exam-grid">
+        <div class="exam-card">
+          <b>Practice Exam 1</b>
+          <p>150 original questions. Separate bank from quizzes and Exam 2.</p>
+          <button class="startbtn" data-exam="exam1">Start Exam 1</button>
+        </div>
+        <div class="exam-card">
+          <b>Practice Exam 2</b>
+          <p>150 original questions. Separate bank from quizzes and Exam 1.</p>
+          <button class="startbtn" data-exam="exam2">Start Exam 2</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="quizRunner" style="display:none">
+      <div class="q-progress">
+        <div class="track"><div class="fill" id="qFill"></div></div>
+        <div class="lbl" id="qCount"></div>
+      </div>
+      <div class="q-sys" id="qSys"></div>
+      <div class="q-stem" id="qStem"></div>
+      <div id="qOpts"></div>
+      <div class="rationale" id="qRationale"></div>
+      <div style="text-align:right"><button class="nextbtn" id="qNext" style="display:none">Next &rarr;</button></div>
+    </div>
+
+    <div class="card" id="quizResults" style="display:none">
+      <div class="results">
+        <div class="score" id="rsScore"></div>
+        <div class="sub" id="rsSub"></div>
+        <div class="breakdown" id="rsBreak"></div>
+        <button class="startbtn" style="margin-top:22px" onclick="resetQuiz()">New quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PROGRESS ================= -->
+  <div class="view" id="view-progress">
+    <div class="kpi-row" id="progKpis"></div>
+    <div class="card">
+      <h2 style="font-size:17px;margin-bottom:12px">Coverage by system</h2>
+      <div id="progBars"></div>
+    </div>
+    <div class="section-title">Weak areas to revisit</div>
+    <div class="card" id="weakList"><p class="muted" style="margin:0">Miss a quiz question and the topic shows up here.</p></div>
+  </div>
+
+  <div class="foot">CCRN&reg; is a registered trademark of AACN. This is an independent study tool, not affiliated with or endorsed by AACN.</div>
+</div>
+
+<script>
+/* =====================================================================
+   DATA LAYER  —  Current AACN Adult CCRN Test Plan (exams on/after Nov 12 2025)
+   Weights: Clinical Judgment 80% (CV 13, Resp 12, Endo/Heme/GI/Renal/Integ 21,
+   MSK/Neuro/Behavioral 18, Multisystem 16) + Professional Caring 20%.
+   ===================================================================== */
+const PLAN = [
+  { id:'cv', name:'Cardiovascular', pct:13, kind:'clinical', subs:[
+    'Acute coronary syndrome','Aortic aneurysm / dissection / rupture','Cardiac infection & inflammatory disease',
+    'Cardiac surgery','Cardiac tamponade','Cardiac trauma','Cardiac / vascular catheterization',
+    'Cardiogenic shock','Cardiomyopathy','Dysrhythmias','Heart failure','Hypertensive crisis',
+    'Myocardial conduction defects (QT, WPW)','Structural heart defects / valvular disease',
+    'Vascular disorders','Vascular interventions'] },
+  { id:'resp', name:'Respiratory', pct:12, kind:'clinical', subs:[
+    'Acute pulmonary edema','Acute pulmonary embolus','ARDS','Acute respiratory failure',
+    'Acute respiratory infection (pneumonia)','Chronic conditions (COPD / asthma)',
+    'Mechanical ventilation complications','Pleural space abnormalities','Pulmonary hemorrhage',
+    'Pulmonary hypertension','Status asthmaticus','Thoracic & airway trauma','Thoracic surgery'] },
+  { id:'ehgri', name:'Endocrine / Heme-Immuno / GI / Renal-GU / Integumentary', pct:21, kind:'clinical', subs:[
+    'Adrenal insufficiency','Diabetes insipidus (DI)','Diabetes mellitus 1 & 2','Diabetic ketoacidosis (DKA)',
+    'Hyperglycemia','Hyperosmolar hyperglycemic state (HHS)','SIADH','Thyroid disorders',
+    'Anemia','Autoimmune disorders (MG, GBS, lupus)','Coagulopathies (DIC, ITP, HIT)',
+    'Myelosuppression (thrombocytopenia, neutropenia)','Oncologic complications (TLS)','Transfusion reactions (TRALI / TACO)',
+    'Abdominal compartment syndrome','Acute abdominal trauma','Acute GI hemorrhage',
+    'Bowel infarction / obstruction / perforation','GI surgeries','Hepatic failure / coma','Liver disease',
+    'Malnutrition & malabsorption','Pancreatitis','Peritonitis',
+    'Acute kidney injury (AKI / ATN)','Chronic kidney disease (CKD)','Kidney infection / urosepsis',
+    'Cellulitis','IV infiltration','Necrotizing fasciitis','Pressure injury','Skin failure','Wounds'] },
+  { id:'mnb', name:'Musculoskeletal / Neurological / Behavioral-Psychosocial', pct:18, kind:'clinical', subs:[
+    'Compartment syndrome','Fractures','Muscular deconditioning','Musculoskeletal trauma',
+    'Acute spinal cord injury','Brain death','Encephalopathy','Stroke (hemorrhagic / ischemic)',
+    'Hydrocephalus','Neurogenic shock','Neurologic infectious disease','Neurological storming',
+    'Neuromuscular disorders (ALS)','Neurosurgery','Neurovascular abnormalities','Seizure disorders',
+    'Space-occupying lesions','Spinal surgeries','Traumatic brain injury',
+    'Agitation','Aggression / violence','Delirium','Medical non-adherence','Mood disorders / depression / anxiety',
+    'Post-intensive care syndrome (PICS)','PTSD','Self-harm','Substance use disorder','Suicidal ideation'] },
+  { id:'multi', name:'Multisystem', pct:16, kind:'clinical', subs:[
+    'Acid-base imbalance','Anoxic injury','Burns','Comorbidity in transplant history','Palliative care',
+    'End-of-life','Failure to thrive','Fluid & electrolyte imbalances','Healthcare-associated infections',
+    'Infectious diseases','Life-threatening maternal / fetal complications','MODS','Obesity-related complications',
+    'Pain','Rhabdomyolysis','Sepsis','Shock states (distributive / obstructive)','Sleep disruption',
+    'Submersion injuries','SIRS','Thermoregulation','Toxic ingestion / inhalation / exposure'] },
+  { id:'pc', name:'Professional Caring & Ethical Practice', pct:20, kind:'caring', subs:[
+    'Advocacy / Moral Agency','Caring Practices','Clinical Inquiry','Collaboration',
+    'Facilitation of Learning','Response to Diversity','Systems Thinking'] }
+];
+
+/* Difficulty-density multipliers (applied on top of raw %) so dense, high-fail
+   systems get slightly more time. Kept close to 1.0 so blueprint stays honest. */
+const WEIGHT_ADJ = { cv:1.05, resp:1.05, ehgri:1.0, mnb:1.0, multi:1.05, pc:0.85 };
+
+const SYSTEM_STUDY_GUIDES = {
+  cv:{
+    core:'Perfusion, preload/afterload, coronary flow, rhythm stability, and shock fingerprints.',
+    assess:'12-lead ECG, troponin trend, lactate, urine output, MAP, CVP/PA numbers when present, new murmurs, chest-tube changes after surgery.',
+    priorities:'Identify unstable rhythms, protect coronary perfusion, prepare for reperfusion or mechanical correction, and avoid preload-dropping meds in RV infarct/tamponade.',
+    traps:'Nitro in RV infarct, fluids in cardiogenic shock, unsynchronized shock for pulsed VT, and vasodilator before beta-blocker in dissection.'
+  },
+  resp:{
+    core:'Oxygenation vs ventilation, shunt vs dead space, lung compliance, airway resistance, and complications of positive-pressure ventilation.',
+    assess:'ABG pattern, SpO2 trend, work of breathing, breath sounds, peak/plateau pressures, chest x-ray, secretions, and sudden ventilator alarm changes.',
+    priorities:'Stabilize airway, use lung-protective ventilation, troubleshoot DOPE, prevent VAP, and match oxygen targets to the disease process.',
+    traps:'Normalizing CO2 in status asthmaticus, too much oxygen in COPD, high tidal volumes in ARDS, and forgetting tension pneumothorax after sudden vent decompensation.'
+  },
+  ehgri:{
+    core:'Metabolic regulation, clotting/bleeding balance, perfusion to kidney/gut/skin, immune compromise, and high-risk lab patterns.',
+    assess:'Glucose, anion gap, potassium, creatinine, urine output, coagulation labs, platelets, liver labs, abdominal pressure, skin perfusion, and infection signs.',
+    priorities:'Correct life threats in the right order, protect the airway/perfusion, stop offending agents, treat the precipitant, and monitor for rapid deterioration.',
+    traps:'Insulin before potassium in DKA, platelets for HIT, confusing TRALI with TACO, and treating lab numbers without the patient context.'
+  },
+  mnb:{
+    core:'Cerebral perfusion, spinal cord autonomic control, secondary injury prevention, delirium/agitation safety, and functional recovery.',
+    assess:'LOC, pupils, NIHSS/GCS, motor/sensory changes, ICP/CPP, seizure activity, pain/agitation scores, withdrawal risk, and safety threats.',
+    priorities:'Prevent hypoxia/hypotension, protect CPP, recognize neuro emergencies, reduce delirium drivers, and use de-escalation before restraints when possible.',
+    traps:'Hyperventilating TBI too long, missing Cushing triad, giving PO before stroke swallow screen, and missing neurogenic shock bradycardia.'
+  },
+  multi:{
+    core:'System-wide failure patterns: shock, sepsis, acid-base, electrolytes, burns, toxins, pain, thermoregulation, and end-of-life priorities.',
+    assess:'MAP, lactate, perfusion, ABG, electrolytes, temperature, source of infection, fluid responsiveness, organ dysfunction, and goals of care.',
+    priorities:'Treat reversible killers first, trend response to resuscitation, escalate source control, and align care with patient goals when recovery is uncertain.',
+    traps:'Delaying antibiotics for perfect cultures, correcting sodium too fast, forgetting calcium first in hyperkalemic ECG changes, and using pressors as the only fix for obstructive shock.'
+  },
+  pc:{
+    core:'The AACN Synergy Model: nurse competencies matched to patient and family needs.',
+    assess:'Patient values, decisional capacity, family understanding, team communication, cultural needs, safety risks, learning readiness, and system barriers.',
+    priorities:'Protect autonomy and safety, collaborate across the team, teach clearly, escalate unsafe care, and use evidence to improve practice.',
+    traps:'Choosing passive answers, ignoring family/patient voice, treating cultural differences as obstacles, and confusing advocacy with conflict avoidance.'
+  }
+};
+
+const STUDY_DETAIL_TEXT = {
+  cv:{
+    core:'For cardiac topics, start by deciding whether the problem is pump failure, electrical instability, vascular obstruction, impaired filling, or impaired coronary perfusion. Then connect the mechanism to the first bedside consequence: falling cardiac output, ischemia, pulmonary congestion, or obstructive shock.',
+    assess:'Trend the story, not one number. Pair ECG changes with symptoms and troponins; pair MAP with mentation, urine output, skin signs, lactate, and filling pressures when available. For post-op cardiac patients, drainage changes and rising pressures can matter before labs move.',
+    priorities:'The CCRN-style first action usually protects perfusion while the definitive fix is mobilized. That may mean synchronized cardioversion, PCI activation, pericardiocentesis preparation, preload support, vasopressors, or questioning a medication that worsens the hemodynamic problem.',
+    traps:'Cardiac questions love look-alikes: cardiogenic vs hypovolemic shock, tamponade vs tension pneumothorax, stable vs unstable tachycardia, RV infarct vs left-sided pulmonary edema, and dissection pain vs ACS.'
+  },
+  resp:{
+    core:'Respiratory questions split into oxygenation failure, ventilation failure, airway obstruction, lung stiffness, or perfusion/dead-space mismatch. Naming that category makes the ventilator or oxygen decision much clearer.',
+    assess:'Look at the ABG and the patient together. A rising CO2 in someone who was working hard can mean fatigue. Peak pressure, plateau pressure, breath sounds, chest rise, secretions, and sudden alarms tell you whether the issue is patient, tube, lung, or machine.',
+    priorities:'Airway and breathing come first, but the best answer is usually specific: manually ventilate during sudden deterioration, increase PEEP for shunt physiology, use low tidal volumes for ARDS, or extend expiratory time for air trapping.',
+    traps:'Do not treat a silent chest as improvement in asthma. Do not raise tidal volume to fix ARDS hypoxemia. Do not ignore a low-pressure alarm as “just equipment.” Do not chase 100% saturation in COPD when the target range is safer.'
+  },
+  ehgri:{
+    core:'This large domain is mostly pattern recognition and correct sequencing. Decide whether the problem is endocrine/metabolic, bleeding/clotting, immune suppression, GI catastrophe, renal clearance failure, or skin/soft-tissue breakdown.',
+    assess:'Labs drive many questions here, but the exam still wants clinical context. Match potassium to ECG, platelets to clotting vs bleeding risk, creatinine to urine output, glucose to osmolality/acidosis, and transfusion symptoms to volume status.',
+    priorities:'Correct the life threat in the right order: fluids before insulin in DKA/HHS, potassium safety before insulin, calcium first for unstable hyperkalemia, stop all heparin in HIT, and stop the transfusion when a reaction is suspected.',
+    traps:'Common wrong answers treat the lab but hurt the patient: insulin with low potassium, platelets for HIT, diuresis for TRALI, rapid sodium/osmolality correction, or giving nephrotoxins to a patient with evolving AKI.'
+  },
+  mnb:{
+    core:'Neuro and behavioral questions focus on protecting function. The mechanism may be impaired cerebral perfusion, rising ICP, seizure activity, spinal shock, delirium, withdrawal, violence risk, or secondary injury after trauma.',
+    assess:'Frequent trendable assessments matter: LOC, pupils, motor changes, GCS/NIHSS, ICP/CPP, seizure activity, agitation triggers, withdrawal signs, and immediate safety risks. A small neurologic change can be the earliest warning.',
+    priorities:'Prevent secondary brain and spinal cord injury: avoid hypoxia and hypotension, protect CPP, keep the head midline, screen swallowing before PO intake, treat seizures, and de-escalate agitation while keeping staff and patient safe.',
+    traps:'Late signs such as Cushing triad should never be treated casually. Hyperventilation is only a short bridge for herniation. Stroke treatment branches after non-contrast CT. Neurogenic shock is hypotension with bradycardia, not tachycardia.'
+  },
+  multi:{
+    core:'Multisystem topics ask whether the entire body is failing from shock, infection, acid-base derangement, electrolyte instability, toxins, burns, temperature extremes, pain, or end-of-life decline.',
+    assess:'Use perfusion markers and trends: MAP, lactate, urine output, mental status, skin signs, ABG, electrolytes, temperature, source of infection, and response to fluids or pressors. Reassessment after intervention is part of the answer.',
+    priorities:'Treat reversible killers quickly: antibiotics and source control in sepsis, calcium for hyperkalemic ECG changes, fluids/pressors based on shock type, antidotes when indicated, and clear goals-of-care conversations when burdens outweigh benefits.',
+    traps:'Do not let cultures delay antibiotics in true shock. Do not correct sodium or osmolality too fast. Do not use pressors as the only fix for obstructive shock. Do not confuse respiratory compensation with the primary acid-base disorder.'
+  },
+  pc:{
+    core:'Professional Caring is not fluff. It tests how you use the Synergy Model under pressure: advocacy, collaboration, clinical inquiry, diversity, teaching, systems thinking, and moral agency.',
+    assess:'Read for patient values, decisional capacity, family understanding, cultural needs, safety risks, team conflict, learning readiness, and whether the nurse has enough information to act safely.',
+    priorities:'The best answer usually keeps the patient’s voice and safety central while using the right chain of communication. Clarify unsafe orders, escalate unresolved concerns, include family when appropriate, and teach in a way the learner can actually use.',
+    traps:'Passive answers are often wrong: doing nothing, blindly following an unsafe order, ignoring cultural context, excluding the family/patient voice, or pushing conflict onto someone else without communication.'
+  }
+};
+
+const MEDIA_LIBRARY = {
+  cv:[
+    {type:'Image search',title:'STEMI territory ECG examples',url:'https://www.google.com/search?tbm=isch&q=STEMI+territory+ECG+inferior+anterior+lateral',note:'Use beside ACS, RV infarct, and dissection differentials.'},
+    {type:'Video search',title:'ACLS tachycardia and bradycardia algorithms',url:'https://www.youtube.com/results?search_query=ACLS+tachycardia+bradycardia+algorithm+ICU+nurse',note:'Best paired with dysrhythmias and unstable rhythm decisions.'},
+    {type:'Diagram search',title:'Shock hemodynamic profiles',url:'https://www.google.com/search?tbm=isch&q=cardiogenic+hypovolemic+septic+obstructive+shock+hemodynamics',note:'Compare CI, SVR, CVP, and PCWP before quiz questions.'}
+  ],
+  resp:[
+    {type:'Video search',title:'ARDS lung protective ventilation',url:'https://www.youtube.com/results?search_query=ARDS+lung+protective+ventilation+PEEP+plateau+pressure',note:'Watch while reviewing ARDS and ventilator complications.'},
+    {type:'Image search',title:'Ventilator waveforms and alarms',url:'https://www.google.com/search?tbm=isch&q=mechanical+ventilator+waveforms+auto+PEEP+high+pressure+alarm',note:'Helps make DOPE and auto-PEEP visual.'},
+    {type:'Image search',title:'Pulmonary embolism pathophysiology',url:'https://www.google.com/search?tbm=isch&q=pulmonary+embolism+pathophysiology+dead+space+VQ+mismatch',note:'Use for sudden dyspnea, respiratory alkalosis, and dead-space questions.'}
+  ],
+  ehgri:[
+    {type:'Diagram search',title:'DKA vs HHS comparison',url:'https://www.google.com/search?tbm=isch&q=DKA+vs+HHS+comparison+anion+gap+osmolality',note:'High-yield table for endocrine questions.'},
+    {type:'Video search',title:'DIC, HIT, ITP nursing review',url:'https://www.youtube.com/results?search_query=DIC+HIT+ITP+nursing+review+critical+care',note:'Use with coagulation and transfusion topics.'},
+    {type:'Image search',title:'AKI prerenal intrarenal postrenal',url:'https://www.google.com/search?tbm=isch&q=acute+kidney+injury+prerenal+intrarenal+postrenal+nursing',note:'Good visual for BUN:Cr, casts, and obstruction patterns.'}
+  ],
+  mnb:[
+    {type:'Diagram search',title:'Cerebral perfusion pressure and ICP',url:'https://www.google.com/search?tbm=isch&q=CPP+MAP+ICP+cerebral+perfusion+pressure+diagram',note:'Use with TBI, ICP, and herniation questions.'},
+    {type:'Video search',title:'NIH stroke scale demonstration',url:'https://www.youtube.com/results?search_query=NIH+stroke+scale+demonstration+nurse',note:'Pairs with ischemic/hemorrhagic stroke workflow.'},
+    {type:'Image search',title:'Spinal cord injury syndromes and neurogenic shock',url:'https://www.google.com/search?tbm=isch&q=spinal+cord+injury+neurogenic+shock+bradycardia+diagram',note:'Use for cervical injury, autonomic dysreflexia, and shock comparison.'}
+  ],
+  multi:[
+    {type:'Diagram search',title:'Sepsis hour-1 bundle and shock pathway',url:'https://www.google.com/search?tbm=isch&q=sepsis+hour+1+bundle+MAP+lactate+norepinephrine',note:'Anchor lactate, cultures, antibiotics, fluids, and pressors.'},
+    {type:'Video search',title:'ABG interpretation practice',url:'https://www.youtube.com/results?search_query=ABG+interpretation+practice+respiratory+metabolic+acidosis+alkalosis',note:'Use before acid-base quiz blocks.'},
+    {type:'Image search',title:'Electrolyte ECG changes',url:'https://www.google.com/search?tbm=isch&q=hyperkalemia+hypokalemia+calcium+magnesium+ECG+changes',note:'Best for potassium, calcium, magnesium, and emergency treatment order.'}
+  ],
+  pc:[
+    {type:'Reference',title:'AACN Synergy Model overview',url:'https://www.aacn.org/nursing-excellence/aacn-standards/synergy-model',note:'Use for Professional Caring competencies.'},
+    {type:'Video search',title:'Nursing ethics and advocacy scenarios',url:'https://www.youtube.com/results?search_query=critical+care+nursing+ethics+advocacy+patient+autonomy+scenarios',note:'Practice the judgment style behind advocacy questions.'},
+    {type:'Reference',title:'AACN healthy work environment standards',url:'https://www.aacn.org/nursing-excellence/healthy-work-environments',note:'Useful for collaboration, systems thinking, and escalation scenarios.'}
+  ]
+};
+
+const CORE_REFERENCES = [
+  {group:'Exam plan',title:'AACN Adult CCRN certification resources',url:'https://www.aacn.org/certification/get-certified/ccrn-adult',note:'Use this to confirm eligibility, current test plan, and exam handbook updates.'},
+  {group:'Cardiac',title:'American Heart Association CPR and ECC guidelines',url:'https://cpr.heart.org/en/resuscitation-science/cpr-and-ecc-guidelines',note:'ACLS rhythms, resuscitation logic, and post-arrest care references.'},
+  {group:'Sepsis',title:'Surviving Sepsis Campaign guidelines',url:'https://www.sccm.org/SurvivingSepsisCampaign/Guidelines',note:'Sepsis bundle, vasopressors, fluids, and source control.'},
+  {group:'ARDS',title:'ARDSNet ventilator protocol',url:'https://www.ardsnet.org/tools.shtml',note:'Low tidal volume ventilation and oxygenation tables.'},
+  {group:'Stroke',title:'AHA/ASA stroke guidance',url:'https://www.stroke.org/en/professionals/stroke-resource-library',note:'Stroke workflow, BP targets, thrombolytics, thrombectomy, and post-stroke care.'},
+  {group:'Book companion',title:"Barron's CCRN Exam review book",url:'https://www.google.com/search?q=Barron%27s+CCRN+Exam+review+book',note:'Use your physical/digital book for full chapters; this app organizes the recall and practice layer.'}
+];
+
+/* =====================================================================
+   STUDY CONTENT  —  deep notes for highest-yield topics.
+   Topics without an entry show a "build this next" note + the study template.
+   ===================================================================== */
+const CONTENT = {
+"Acute coronary syndrome": {hy:true, html:`
+<h3>Core concept</h3>
+<p>ACS is a spectrum of acute myocardial ischemia: <b>unstable angina (UA)</b>, <b>NSTEMI</b>, and <b>STEMI</b>. The dividing lines are the ECG and troponin. UA = ischemic symptoms, <b>no</b> troponin rise. NSTEMI = troponin rise <b>without</b> ST elevation. STEMI = ST elevation from acute total coronary occlusion &rarr; this is the one racing the clock.</p>
+<div class="key"><b>High-yield:</b> STEMI is a <b>time-to-reperfusion</b> problem. First-medical-contact-to-balloon goal &le;90 min (PCI center) or &le;120 min if transfer needed. If PCI isn't reachable in time, fibrinolytics within 30 min of arrival.</div>
+<h3>Recognition</h3>
+<ul>
+<li>Classic: substernal pressure, radiation to jaw/left arm, diaphoresis, nausea, dyspnea.</li>
+<li><b>Atypical presentations tested hard:</b> women, elderly, and diabetics may present with fatigue, dyspnea, epigastric pain, or no chest pain at all.</li>
+<li>STEMI ECG: ST elevation in <b>2+ contiguous leads</b>. Inferior = II/III/aVF (watch for RCA &rarr; RV involvement). Anterior = V1&ndash;V4 (LAD, worst prognosis). Lateral = I/aVL/V5&ndash;V6.</li>
+</ul>
+<h3>Nursing priorities</h3>
+<p><b>MONA is outdated as an order</b> &mdash; know the current reasoning:</p>
+<table><tr><th>Intervention</th><th>Key nursing point</th></tr>
+<tr><td>Aspirin 162&ndash;325 mg chewed</td><td>Give early unless true contraindication. Chewed = faster absorption.</td></tr>
+<tr><td>Oxygen</td><td><b>Only if SpO2 &lt;90%.</b> Routine O2 in normoxic patients can worsen outcomes.</td></tr>
+<tr><td>Nitroglycerin</td><td>For pain/preload. <b>Contraindicated</b> in RV infarct (preload-dependent), hypotension, or PDE-5 inhibitor use (sildenafil) within 24&ndash;48 h.</td></tr>
+<tr><td>Morphine</td><td>For refractory pain; use cautiously (may blunt antiplatelet absorption).</td></tr>
+<tr><td>Antiplatelet + anticoagulant</td><td>P2Y12 inhibitor + heparin per protocol for the cath lab.</td></tr>
+</table>
+<div class="warn"><b>Inferior MI trap:</b> Right-sided ECG (V4R) if you see inferior ST elevation. RV infarct patients are <b>preload dependent</b> &mdash; nitro and diuretics drop them. Treat hypotension with <b>fluids</b>, not nitro.</div>
+<h3>Complications to anticipate</h3>
+<ul>
+<li>Dysrhythmias (VT/VF is the leading early cause of death) &mdash; keep defibrillation ready.</li>
+<li>Cardiogenic shock (usually large anterior MI).</li>
+<li>Mechanical: papillary muscle rupture (new MR murmur, flash pulmonary edema), VSD, free-wall rupture.</li>
+</ul>`},
+
+"Cardiogenic shock": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Pump failure: the heart can't generate adequate cardiac output despite adequate intravascular volume. Most common cause is a large <b>acute MI</b> (usually anterior/LAD). The hemodynamic signature is <b>low CO/CI + high filling pressures</b>.</p>
+<div class="key"><b>Hemodynamic fingerprint:</b> &darr; CI (&lt;2.2), &uarr; PCWP (&gt;15&ndash;18), &uarr; SVR (compensatory clamp-down), &darr; MAP. Cold and wet.</div>
+<h3>Shock comparison (memorize this table)</h3>
+<table><tr><th>Type</th><th>CO/CI</th><th>SVR</th><th>PCWP / preload</th></tr>
+<tr><td>Cardiogenic</td><td>&darr;</td><td>&uarr;</td><td>&uarr;</td></tr>
+<tr><td>Hypovolemic</td><td>&darr;</td><td>&uarr;</td><td>&darr;</td></tr>
+<tr><td>Distributive (septic)</td><td>&uarr; then &darr;</td><td>&darr;</td><td>&darr; / normal</td></tr>
+<tr><td>Obstructive (tamponade/PE)</td><td>&darr;</td><td>&uarr;</td><td>varies (&uarr; in tamponade)</td></tr>
+</table>
+<h3>Assessment</h3>
+<ul>
+<li>Cool/mottled extremities, weak pulses, &darr; urine output, altered mentation.</li>
+<li>Pulmonary congestion (crackles, &uarr; work of breathing) from backward failure.</li>
+<li>SvO2/ScvO2 <b>low</b> &mdash; tissues extracting more O2 because delivery is poor.</li>
+</ul>
+<h3>Nursing priorities & management</h3>
+<ul>
+<li><b>Fix the cause:</b> emergent revascularization (PCI) for MI-related shock.</li>
+<li><b>Inotropes</b> to improve contractility (dobutamine, milrinone) &mdash; watch for hypotension/vasodilation with milrinone.</li>
+<li><b>Vasopressors</b> (norepinephrine preferred over dopamine &mdash; less arrhythmia, better survival) to maintain MAP.</li>
+<li><b>Mechanical circulatory support:</b> IABP (afterload reduction, coronary perfusion), Impella (LV unloading), VA-ECMO for refractory shock.</li>
+<li>Careful diuresis/fluid balance &mdash; they're wet, so aggressive fluids usually worsen them.</li>
+</ul>
+<div class="warn"><b>Contrast with hypovolemic shock:</b> the wrong move in cardiogenic shock is a fluid bolus. Both have low CO and high SVR, but PCWP tells them apart &mdash; high in cardiogenic, low in hypovolemic.</div>`},
+
+"Heart failure": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Inability to pump enough to meet demand or to do so only at elevated filling pressures. Split into <b>HFrEF</b> (systolic, EF &le;40%, contractility problem) and <b>HFpEF</b> (diastolic, EF &ge;50%, stiff ventricle / filling problem).</p>
+<h3>Left vs right failure</h3>
+<table><tr><th>Left-sided</th><th>Right-sided</th></tr>
+<tr><td>Backs up into <b>lungs</b>: crackles, dyspnea, orthopnea, PND, pink frothy sputum, &uarr; PCWP</td><td>Backs up into <b>body</b>: JVD, peripheral edema, hepatomegaly, ascites, &uarr; CVP</td></tr></table>
+<div class="key"><b>Most common cause of right HF = left HF.</b> Isolated right HF think PE, pulmonary HTN, RV infarct.</div>
+<h3>Assessment</h3>
+<ul><li>BNP / NT-proBNP elevated (tracks volume/stretch).</li>
+<li>S3 gallop = volume overload/systolic failure. S4 = stiff ventricle/diastolic.</li>
+<li>Acute decompensation = flash pulmonary edema, hypoxia, anxiety.</li></ul>
+<h3>Management (LMNOP for acute pulmonary edema)</h3>
+<ul>
+<li><b>L</b>asix (diuresis), <b>M</b>orphine (cautious, preload/anxiety), <b>N</b>itrates (preload &plusmn; afterload), <b>O</b>xygen/positioning (upright), <b>P</b>ositive pressure (CPAP/BiPAP to reduce work + preload).</li>
+<li>Chronic GDMT: ARNI/ACE-ARB, beta-blocker, MRA, SGLT2 inhibitor.</li>
+</ul>
+<div class="warn"><b>Beta-blocker timing:</b> start when euvolemic/stable, <b>not</b> during acute decompensated volume overload.</div>`},
+
+"Dysrhythmias": {hy:true, html:`
+<h3>Core concept</h3>
+<p>The exam wants rhythm recognition + the <b>right response</b>, especially the stable-vs-unstable fork.</p>
+<div class="key"><b>The master rule:</b> Unstable + tachycardia &rarr; <b>synchronized cardioversion</b>. Pulseless VT/VF &rarr; <b>defibrillation + CPR</b>. Unstable bradycardia &rarr; <b>atropine &rarr; pacing/pressors</b>. "Unstable" = hypotension, altered mental status, chest pain, signs of shock, acute HF.</p>
+<h3>High-yield rhythms</h3>
+<table><tr><th>Rhythm</th><th>Recognition</th><th>Response</th></tr>
+<tr><td>Atrial fibrillation</td><td>Irregularly irregular, no P waves</td><td>Rate control (dilt/BB), anticoag, cardiovert if unstable</td></tr>
+<tr><td>SVT</td><td>Narrow, regular, fast, no visible P</td><td>Vagal &rarr; adenosine; cardiovert if unstable</td></tr>
+<tr><td>Monomorphic VT (pulse)</td><td>Wide, regular, fast</td><td>Amiodarone if stable; sync cardiovert if unstable</td></tr>
+<tr><td>Polymorphic VT / torsades</td><td>Twisting axis</td><td><b>Magnesium</b>; defib if pulseless. Fix QT/lytes</td></tr>
+<tr><td>VF / pulseless VT</td><td>Chaotic / wide no pulse</td><td>Defibrillate + CPR + epi</td></tr>
+<tr><td>3rd-degree block</td><td>P and QRS independent</td><td>Pacing; atropine often ineffective</td></tr>
+<tr><td>PEA / asystole</td><td>Organized rhythm no pulse / flatline</td><td>CPR + epi, find H's & T's. <b>Never</b> shock asystole</td></tr>
+</table>
+<div class="warn"><b>Adenosine tips:</b> rapid IV push + flush, closest port. Warn the patient about a few seconds of "flatline"/chest discomfort. Won't fix A-fib.</div>`},
+
+"Cardiac tamponade": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Fluid in the pericardial sac compresses the heart, restricting diastolic filling &rarr; falling stroke volume &rarr; obstructive shock. Speed matters more than volume: rapid accumulation (trauma, post-cath, post-op) causes tamponade with much less fluid than a slow effusion.</p>
+<div class="key"><b>Beck's triad:</b> hypotension + JVD (distended neck veins) + muffled heart sounds. Add <b>pulsus paradoxus</b> (SBP drop &gt;10 mmHg on inspiration) and low-voltage/electrical alternans on ECG.</div>
+<h3>Hemodynamics</h3>
+<ul><li>Equalization of diastolic pressures (CVP = PADP = PCWP).</li>
+<li>&uarr; CVP, &darr; CO, &uarr; SVR, narrow pulse pressure.</li></ul>
+<h3>Nursing priorities</h3>
+<ul>
+<li><b>Definitive tx = pericardiocentesis</b> (or pericardial window / surgery for trauma). Have the tray ready.</li>
+<li>Bridge with <b>fluids</b> to maintain preload; avoid anything that drops preload (nitro, aggressive diuresis).</li>
+<li>Post-cardiac-surgery: sudden &darr; chest-tube output + rising filling pressures + hypotension = suspect <b>tamponade from clot</b>. Escalate immediately.</li>
+</ul>
+<div class="warn"><b>Contrast with tension pneumothorax:</b> both give JVD + hypotension + shock. Tamponade = muffled heart sounds, equal breath sounds. Tension pneumo = absent breath sounds + tracheal deviation &rarr; needle decompression.</div>`},
+
+"Aortic aneurysm / dissection / rupture": {hy:true, html:`
+<h3>Core concept</h3>
+<p><b>Aneurysm</b> = weakened dilated wall. <b>Dissection</b> = tear in the intima; blood tracks into a false lumen. <b>Rupture</b> = through-and-through &rarr; catastrophic hemorrhage.</p>
+<div class="key"><b>Dissection hallmark:</b> sudden <b>tearing / ripping</b> chest or back pain, often with a <b>blood-pressure or pulse difference between arms</b>. Widened mediastinum on CXR.</div>
+<h3>Management priorities</h3>
+<ul>
+<li><b>Impulse control:</b> lower <b>shear stress</b> first &mdash; beta-blocker (esmolol/labetalol) to drop HR/contractility <b>before</b> adding a vasodilator, then nitroprusside for BP. Target SBP ~100&ndash;120, HR &lt;60.</li>
+<li>Type A (ascending) = surgical emergency. Type B (descending) = often medical unless complicated.</li>
+<li>Large-bore access, type & cross, pain control, serial neuro/pulse checks (branch-vessel involvement).</li>
+</ul>
+<div class="warn"><b>Order matters:</b> a vasodilator alone triggers reflex tachycardia that <b>increases</b> shear and can extend the dissection. Beta-blockade first.</div>`},
+
+"ARDS": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Diffuse alveolar damage &rarr; non-cardiogenic pulmonary edema, refractory hypoxemia, and stiff ("low-compliance") lungs. Berlin definition: acute onset (&le;1 week), bilateral infiltrates, <b>not</b> explained by cardiac failure/overload, with hypoxemia graded by PaO2/FiO2.</p>
+<div class="key"><b>The defining feature is refractory hypoxemia</b> &mdash; PaO2 stays low despite rising FiO2, because of shunt (perfused but non-ventilated alveoli). PF ratio: mild 200&ndash;300, moderate 100&ndash;200, severe &le;100.</div>
+<h3>Cardiogenic vs ARDS edema</h3>
+<table><tr><th>ARDS</th><th>Cardiogenic edema</th></tr>
+<tr><td>Normal PCWP (&le;18), non-cardiac cause, normal BNP</td><td>&uarr; PCWP, &uarr; BNP, cardiac history</td></tr></table>
+<h3>Lung-protective ventilation (heavily tested)</h3>
+<ul>
+<li><b>Low tidal volume: 4&ndash;6 mL/kg predicted body weight.</b> This is the survival intervention.</li>
+<li>Plateau pressure <b>&lt;30 cmH2O</b>.</li>
+<li><b>PEEP</b> to recruit alveoli and improve oxygenation (allows lower FiO2).</li>
+<li><b>Permissive hypercapnia</b> &mdash; tolerate high CO2/low-ish pH to protect the lungs.</li>
+<li><b>Prone positioning</b> for moderate&ndash;severe (PF &lt;150) improves V/Q matching and mortality.</li>
+<li>Conservative fluids, treat the underlying cause (sepsis is #1), &plusmn; neuromuscular blockade early in severe cases.</li>
+</ul>
+<div class="warn"><b>Vent trap:</b> when a stem describes "increasing FiO2 with no improvement in PaO2," the fix is usually <b>increase PEEP</b>, not just more FiO2 &mdash; you're fighting shunt.</div>`},
+
+"Acute pulmonary embolus": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Thrombus (usually from a DVT) lodges in the pulmonary circulation &rarr; dead-space ventilation (ventilated, not perfused) and, if large, acute RV strain / obstructive shock.</p>
+<div class="key"><b>Classic:</b> sudden dyspnea + pleuritic chest pain + tachycardia + hypoxia + <b>hypocapnia</b> (blowing off CO2). Look for RV strain: S1Q3T3, new RBBB, &uarr; troponin/BNP from RV stress.</div>
+<h3>Assessment</h3>
+<ul><li>ABG: respiratory alkalosis + hypoxemia early.</li>
+<li>CT pulmonary angiography = gold standard. D-dimer good for ruling out (high sensitivity, low specificity).</li>
+<li>Massive PE = hypotension/shock; submassive = RV strain but normotensive.</li></ul>
+<h3>Management</h3>
+<ul>
+<li><b>Anticoagulation</b> (heparin) is first-line for most.</li>
+<li><b>Thrombolytics</b> (tPA) for massive PE with hemodynamic instability &mdash; weigh bleeding risk.</li>
+<li>Embolectomy / catheter-directed therapy for select cases.</li>
+<li>Support oxygenation and RV (careful fluids &mdash; the failing RV won't tolerate a big bolus; may need pressors).</li>
+</ul>
+<div class="warn"><b>Prevention is a tested nursing action:</b> VTE prophylaxis (SCDs, chemoprophylaxis, early mobility) is the highest-value intervention for at-risk ICU patients.</div>`},
+
+"Acute respiratory failure": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Two flavors, and the ABG tells you which:</p>
+<table><tr><th>Type I (hypoxemic)</th><th>Type II (hypercapnic)</th></tr>
+<tr><td>&darr; PaO2 (&lt;60), normal/low CO2. Oxygenation failure &mdash; ARDS, pneumonia, edema, PE.</td><td>&uarr; PaCO2 (&gt;50) + acidosis. Ventilation failure &mdash; COPD, oversedation, neuromuscular weakness.</td></tr></table>
+<div class="key"><b>PaO2 &lt;60 or PaCO2 &gt;50 with pH &lt;7.35</b> defines it. Match the fix to the failure: oxygenation problems need O2/PEEP/recruitment; ventilation problems need support of minute ventilation (BiPAP, reverse sedation, ventilation).</div>
+<h3>Nursing priorities</h3>
+<ul><li>Assess work of breathing, accessory muscle use, mental status (rising CO2 &rarr; somnolence).</li>
+<li>Escalate support: O2 &rarr; HFNC &rarr; NIV (BiPAP) &rarr; intubation. NIV good for COPD exacerbation & cardiogenic edema; avoid with &darr;LOC / can't protect airway.</li>
+<li><b>COPD caution:</b> titrate O2 to SpO2 ~88&ndash;92%. Over-oxygenation can worsen hypercapnia (V/Q + Haldane effects) &mdash; but never let them stay hypoxic.</li></ul>`},
+
+"Mechanical ventilation complications": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Know the emergencies, alarm logic, and the bundle.</p>
+<div class="key"><b>Sudden desat / distress on the vent &rarr; DOPE:</b> <b>D</b>isplacement (tube moved/esophageal), <b>O</b>bstruction (secretions/kink/biting), <b>P</b>neumothorax, <b>E</b>quipment failure. Disconnect and <b>manually bag</b> to sort patient vs machine.</p>
+<h3>Alarms</h3>
+<table><tr><th>High-pressure alarm</th><th>Low-pressure alarm</th></tr>
+<tr><td>&uarr; resistance/&darr; compliance: secretions, kink, biting, bronchospasm, pneumothorax, ARDS stiffening</td><td>Loss of volume: circuit disconnect, cuff leak, extubation</td></tr></table>
+<h3>Key complications</h3>
+<ul>
+<li><b>VAP</b> &mdash; prevent with the bundle: HOB 30&ndash;45&deg;, oral care (chlorhexidine per policy), daily sedation interruption + spontaneous breathing trial, DVT + PUD prophylaxis, subglottic suction.</li>
+<li><b>Barotrauma / volutrauma</b> &rarr; pneumothorax (watch for tension: hypotension, absent breath sounds, tracheal deviation &rarr; needle decompress).</li>
+<li><b>Auto-PEEP</b> (breath stacking) in obstructive disease &rarr; hypotension; disconnect to let them exhale.</li>
+<li>Oxygen toxicity, hemodynamic effects of PPV (&darr; preload).</li>
+</ul>
+<div class="warn"><b>Weaning failure clue:</b> rising RR + falling Vt (&uarr; rapid shallow breathing index / RSBI) during an SBT predicts failure &mdash; the patient's telling you they're not ready.</div>`},
+
+"Status asthmaticus": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Severe asthma not responding to standard bronchodilators &mdash; air trapping, rising work of breathing, respiratory acidosis.</p>
+<div class="warn"><b>The most dangerous exam sign:</b> a <b>"quiet" or silent chest</b> and a <b>normalizing/rising PaCO2</b> in a previously tachypneic asthmatic = <b>impending respiratory failure</b>, not improvement. That patient is tiring out &mdash; prepare to intubate.</div>
+<h3>Management</h3>
+<ul><li>Continuous/back-to-back <b>albuterol</b> + ipratropium, systemic <b>corticosteroids</b> early.</li>
+<li><b>Magnesium sulfate</b> IV for severe cases (bronchodilator).</li>
+<li>O2 to keep sats up; consider heliox, NIV as bridge.</li>
+<li>If ventilated: expect air-trapping/auto-PEEP &mdash; use low rate, longer expiratory time, permissive hypercapnia; watch for barotrauma and hypotension.</li></ul>`},
+
+"Diabetic ketoacidosis (DKA)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Absolute insulin deficiency &rarr; hyperglycemia + <b>ketoacidosis</b>. Body burns fat &rarr; ketones &rarr; high anion-gap metabolic acidosis. More common in type 1.</p>
+<div class="key"><b>Triad:</b> glucose usually &gt;250, <b>pH &lt;7.30 + low bicarb</b>, and <b>ketones</b> (blood/urine). Kussmaul breathing (deep, rapid &mdash; blowing off CO2) and fruity/acetone breath.</div>
+<h3>Management order matters</h3>
+<ol>
+<li><b>Fluids first</b> &mdash; isotonic saline for profound dehydration; restores perfusion and starts dropping glucose.</li>
+<li><b>Potassium before/with insulin.</b> Total-body K is <b>depleted</b> even if serum looks normal/high. Insulin drives K into cells &rarr; can cause lethal hypokalemia. <b>Hold insulin if K &lt;3.3</b> until replaced.</li>
+<li><b>Insulin infusion</b> to close the anion gap (the gap, not just the glucose, is the endpoint).</li>
+<li><b>Add dextrose when glucose ~200</b> and keep insulin running until the gap closes/ketones clear.</li>
+</ol>
+<div class="warn"><b>DKA vs HHS:</b> DKA = ketoacidosis, lower glucose, sicker faster, type 1. HHS = <b>severe</b> hyperglycemia (often &gt;600), profound dehydration, <b>minimal ketones/acidosis</b>, &uarr; osmolality, altered mental status, type 2 / elderly. HHS has higher mortality.</div>`},
+
+"Hyperosmolar hyperglycemic state (HHS)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Enough residual insulin to prevent ketosis but not hyperglycemia &rarr; extreme glucose (often &gt;600), massive osmotic diuresis, and <b>profound dehydration</b> with high serum osmolality. Usually type 2, elderly, precipitated by infection or missed meds.</p>
+<div class="key"><b>Hallmark:</b> very high glucose + high osmolality + <b>altered mental status</b>, with <b>minimal ketones and near-normal pH</b>. Fluid deficit is huge (often 8&ndash;10 L).</div>
+<h3>Management</h3>
+<ul><li><b>Aggressive fluid resuscitation</b> is the priority &mdash; more volume-depleted than DKA.</li>
+<li>Insulin (lower requirement than DKA), potassium replacement, treat the precipitant.</li>
+<li>Correct glucose/osmolality <b>gradually</b> &mdash; too-fast correction risks cerebral edema.</li></ul>`},
+
+"Sepsis": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Life-threatening <b>organ dysfunction</b> from a dysregulated host response to infection. <b>Septic shock</b> = sepsis + persistent hypotension needing vasopressors to keep MAP &ge;65 <b>and</b> lactate &gt;2 despite adequate fluids.</p>
+<div class="key"><b>Hour-1 bundle (know it cold):</b> measure <b>lactate</b>; obtain <b>blood cultures before antibiotics</b>; give <b>broad-spectrum antibiotics</b>; start <b>30 mL/kg crystalloid</b> for hypotension or lactate &ge;4; add <b>vasopressors</b> if hypotensive during/after fluids to keep MAP &ge;65.</div>
+<h3>Hemodynamics (distributive)</h3>
+<ul><li>Early "warm shock": &uarr; CO, <b>&darr; SVR</b> (vasodilation), warm/flushed, wide pulse pressure.</li>
+<li>Late "cold shock": myocardial depression &rarr; falling CO.</li>
+<li>&uarr; lactate = tissue hypoperfusion; trend it to gauge resuscitation.</li></ul>
+<h3>Nursing priorities</h3>
+<ul><li><b>Norepinephrine is first-line vasopressor.</b> Add vasopressin second; epinephrine third.</li>
+<li>Source control (drain the abscess, pull the line).</li>
+<li>Re-assess perfusion (MAP, lactate clearance, urine output, cap refill) rather than chasing a single number.</li></ul>
+<div class="warn"><b>Culture-before-antibiotic</b> is a classic tested action &mdash; but <b>never delay antibiotics</b> if cultures can't be drawn quickly in true septic shock.</div>`},
+
+"Shock states (distributive / obstructive)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Shock = inadequate tissue perfusion/oxygen delivery. Four categories, and the exam lives in telling them apart by hemodynamics.</p>
+<table><tr><th>Category</th><th>Examples</th><th>CO</th><th>SVR</th><th>Preload</th></tr>
+<tr><td>Hypovolemic</td><td>hemorrhage, dehydration, burns</td><td>&darr;</td><td>&uarr;</td><td>&darr;</td></tr>
+<tr><td>Cardiogenic</td><td>MI, HF, arrhythmia</td><td>&darr;</td><td>&uarr;</td><td>&uarr;</td></tr>
+<tr><td>Distributive</td><td>septic, anaphylactic, neurogenic</td><td>&uarr;/&darr;</td><td>&darr;</td><td>&darr;</td></tr>
+<tr><td>Obstructive</td><td>tamponade, tension pneumo, massive PE</td><td>&darr;</td><td>&uarr;</td><td>varies</td></tr></table>
+<div class="key"><b>Neurogenic shock</b> (spinal cord injury) is the oddball distributive: hypotension <b>with bradycardia</b> (lost sympathetic tone) &mdash; warm, dry skin. Contrast with hypovolemic/other shock where you'd expect <b>tachycardia</b>.</div>
+<h3>Anaphylactic shock</h3>
+<ul><li><b>Epinephrine IM</b> is first-line &mdash; not antihistamines/steroids (those are adjuncts).</li>
+<li>Airway is the killer: stridor/angioedema &rarr; secure early.</li></ul>
+<div class="warn"><b>Obstructive shock is fixed mechanically, not with pressors alone:</b> tamponade &rarr; pericardiocentesis; tension pneumo &rarr; needle decompression; massive PE &rarr; thrombolysis.</div>`},
+
+"Acid-base imbalance": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Read the ABG in steps: <b>pH</b> (acidemia &lt;7.35 / alkalemia &gt;7.45) &rarr; <b>PaCO2</b> (respiratory driver) &rarr; <b>HCO3</b> (metabolic driver) &rarr; is there <b>compensation</b>?</p>
+<table><tr><th>Disorder</th><th>pH</th><th>PaCO2</th><th>HCO3</th></tr>
+<tr><td>Respiratory acidosis</td><td>&darr;</td><td>&uarr;</td><td>&mdash; (&uarr; if compensating)</td></tr>
+<tr><td>Respiratory alkalosis</td><td>&uarr;</td><td>&darr;</td><td>&mdash; (&darr; if compensating)</td></tr>
+<tr><td>Metabolic acidosis</td><td>&darr;</td><td>&mdash; (&darr; if compensating)</td><td>&darr;</td></tr>
+<tr><td>Metabolic alkalosis</td><td>&uarr;</td><td>&mdash; (&uarr; if compensating)</td><td>&uarr;</td></tr></table>
+<div class="key"><b>Trick:</b> if pH and PaCO2 move in <b>opposite</b> directions &rarr; the problem is <b>respiratory</b>. If pH and HCO3 move the <b>same</b> direction &rarr; <b>metabolic</b>.</div>
+<h3>Anion gap</h3>
+<p>High anion gap metabolic acidosis &mdash; <b>MUDPILES</b> (methanol, uremia, DKA, propylene glycol, iron/INH, lactic acidosis, ethylene glycol, salicylates). Lactic acidosis from shock/sepsis is the ICU staple.</p>
+<div class="warn"><b>Compensation never overcorrects:</b> the body doesn't push pH past normal to the other side. If pH is frankly abnormal on the "wrong" side, suspect a second primary disorder.</div>`},
+
+"Stroke (hemorrhagic / ischemic)": {hy:true, html:`
+<h3>Core concept</h3>
+<p><b>Ischemic</b> (~87%): clot occludes flow. <b>Hemorrhagic</b>: vessel rupture (intracerebral or subarachnoid). The whole early workflow branches on <b>non-contrast CT</b> to tell them apart, because the treatments are opposite.</p>
+<div class="key"><b>Time is brain.</b> Ischemic: IV thrombolytics (alteplase/tenecteplase) within window (typically &le;4.5 h) if no hemorrhage and no contraindications; mechanical thrombectomy for large-vessel occlusion out to 24 h in select patients.</div>
+<h3>BP management (opposite for each type)</h3>
+<table><tr><th>Ischemic</th><th>Hemorrhagic</th></tr>
+<tr><td>Permit higher BP to perfuse penumbra. If giving tPA, keep <b>&lt;185/110</b>. Otherwise tolerate up to ~220/120.</td><td>Lower BP more aggressively to limit bleed expansion (target per protocol, e.g. SBP ~140&ndash;160).</td></tr></table>
+<h3>Nursing priorities</h3>
+<ul><li>Frequent neuro checks (NIHSS), glucose, swallow screen <b>before</b> anything PO (aspiration risk).</li>
+<li>Post-tPA: no antiplatelets/anticoag for 24 h, strict BP control, watch for bleeding/&darr;LOC.</li>
+<li><b>SAH ("worst headache of my life"):</b> watch for <b>rebleeding</b> and <b>vasospasm</b> (days 4&ndash;14) &mdash; <b>nimodipine</b> improves outcomes.</li></ul>`},
+
+"Traumatic brain injury": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Primary injury (the impact) is done; nursing focuses on preventing <b>secondary injury</b> from hypoxia, hypotension, and rising ICP. Goal: protect cerebral perfusion.</p>
+<div class="key"><b>CPP = MAP &minus; ICP.</b> Target CPP ~60&ndash;70. Normal ICP 5&ndash;15; sustained &gt;20&ndash;22 needs treatment. Avoid <b>hypotension and hypoxia</b> &mdash; each independently worsens TBI outcomes.</div>
+<h3>Cushing's triad (late, ominous)</h3>
+<p><b>Hypertension (widening pulse pressure) + bradycardia + irregular respirations</b> = impending herniation. This is a "act now" sign.</p>
+<h3>ICP management</h3>
+<ul><li>HOB 30&deg;, head midline (promote venous drainage), avoid neck flexion/tight ties.</li>
+<li>Normocapnia (PaCO2 ~35&ndash;40); brief hyperventilation only for acute herniation as a bridge.</li>
+<li>Hyperosmolar therapy: <b>mannitol</b> or <b>hypertonic saline</b>.</li>
+<li>Treat pain/agitation/fever, prevent seizures, avoid hypotension; sedation to reduce metabolic demand.</li></ul>
+<div class="warn"><b>Over-hyperventilation is a trap:</b> aggressive hyperventilation drops PaCO2 &rarr; cerebral vasoconstriction &rarr; ischemia. Reserve for acute herniation only.</div>`},
+
+"Increased intracranial pressure": {hy:true, html:`
+<h3>Core concept</h3>
+<p>The skull is fixed volume (brain + blood + CSF &mdash; Monro-Kellie). Add mass/edema/blood and ICP rises once compensation is exhausted, threatening perfusion and herniation.</p>
+<div class="key"><b>Earliest reliable sign of &uarr; ICP = a change in level of consciousness.</b> Late signs: Cushing's triad, fixed/dilated pupil (CN III compression), posturing.</div>
+<h3>Management</h3>
+<ul><li>Same bundle as TBI: HOB 30&deg;, midline head, normocapnia, hyperosmolar therapy, sedation, control fever/seizures.</li>
+<li>CSF drainage via EVD; surgical decompression for refractory cases.</li>
+<li>Cluster care and minimize stimulation &mdash; suctioning, coughing, and agitation all spike ICP.</li></ul>`},
+
+"Coagulopathies (DIC, ITP, HIT)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Three high-yield bleeding/clotting disorders:</p>
+<table><tr><th></th><th>Mechanism</th><th>Labs / clue</th><th>Key action</th></tr>
+<tr><td><b>DIC</b></td><td>Systemic activation &rarr; clots then consumes factors &rarr; bleeding</td><td>&darr; platelets, &darr; fibrinogen, &uarr; PT/PTT, &uarr; D-dimer; bleeds <b>and</b> clots</td><td>Treat the cause (sepsis, OB, trauma); support with products</td></tr>
+<tr><td><b>ITP</b></td><td>Immune platelet destruction</td><td>Isolated low platelets, otherwise normal coags</td><td>Steroids, IVIG; avoid unnecessary platelet transfusion</td></tr>
+<tr><td><b>HIT</b></td><td>Antibody to heparin-PF4 &rarr; <b>clotting</b> despite low platelets</td><td>Platelet drop ~50% ~5&ndash;10 days after heparin; new thrombosis</td><td><b>Stop ALL heparin</b>, start non-heparin anticoagulant (argatroban)</td></tr></table>
+<div class="warn"><b>HIT paradox:</b> platelets are low but the danger is <b>thrombosis</b>, not bleeding. <b>Do not</b> give platelet transfusions, and never "just flush" with heparin. Remove heparin everywhere &mdash; including line flushes and coated catheters.</div>`},
+
+"Transfusion reactions (TRALI / TACO)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Know the reaction types and the <b>first action</b> (which is almost always <b>stop the transfusion</b> and keep the line open with saline).</p>
+<table><tr><th>Reaction</th><th>Signs</th><th>Action beyond stopping</th></tr>
+<tr><td><b>Acute hemolytic</b> (ABO mismatch)</td><td>Fever, flank/back pain, red urine, hypotension, DIC &mdash; can start after a few mL</td><td>Aggressive fluids, support BP/renal, clerical recheck, send blood bank workup</td></tr>
+<tr><td><b>TRALI</b></td><td>Acute hypoxemia/pulmonary edema <b>within 6 h</b>, <b>normal</b> filling pressures</td><td>Respiratory support; it's non-cardiogenic &mdash; don't diurese as first move</td></tr>
+<tr><td><b>TACO</b> (circulatory overload)</td><td>Dyspnea, hypertension, JVD, <b>volume overload</b></td><td><b>Diuresis</b>, slow rate, upright positioning</td></tr>
+<tr><td>Febrile non-hemolytic</td><td>Fever/chills, no hemolysis</td><td>Antipyretics; most common, usually benign</td></tr>
+<tr><td>Allergic / anaphylactic</td><td>Urticaria &rarr; airway/hypotension</td><td>Antihistamine (mild); epinephrine for anaphylaxis</td></tr></table>
+<div class="key"><b>TRALI vs TACO in one line:</b> both cause pulmonary edema post-transfusion &mdash; TACO is <b>overload</b> (hypertensive, &uarr; filling pressures, responds to diuretics); TRALI is <b>inflammatory lung injury</b> (normal pressures, don't diurese).</div>`},
+
+"Acute kidney injury (AKI / ATN)": {hy:true, html:`
+<h3>Core concept</h3>
+<p>Abrupt drop in kidney function. Classify by location &mdash; it drives treatment:</p>
+<table><tr><th>Prerenal</th><th>Intrarenal</th><th>Postrenal</th></tr>
+<tr><td>&darr; perfusion (hypovolemia, shock, HF). <b>BUN:Cr &gt;20:1</b>, low urine Na, responds to fluids</td><td>Direct damage &mdash; ATN (ischemia, nephrotoxins/contrast), <b>muddy brown casts</b>, high urine Na</td><td>Obstruction (stones, retention, mass). Fix the obstruction &mdash; bladder scan / catheter</td></tr></table>
+<div class="key"><b>Watch potassium.</b> Hyperkalemia is the life threat: peaked T waves &rarr; widened QRS &rarr; sine wave &rarr; arrest. Emergency tx: <b>calcium</b> (stabilize membrane) &rarr; <b>insulin+glucose / albuterol</b> (shift) &rarr; <b>kayexalate/diuretics/dialysis</b> (remove).</div>
+<h3>Nursing priorities</h3>
+<ul><li>Strict I&O and daily weights; monitor K, phosphate, acidosis, volume.</li>
+<li>Hold/adjust nephrotoxins (NSAIDs, aminoglycosides, contrast); dose-adjust renally cleared drugs.</li>
+<li>Indications for emergent dialysis &mdash; <b>AEIOU</b>: Acidosis, Electrolytes (refractory hyperK), Intoxications, Overload (refractory), Uremia (pericarditis, encephalopathy).</li></ul>`},
+
+"Life-threatening electrolyte imbalances": {hy:true, html:`
+<h3>High-yield electrolytes</h3>
+<table><tr><th>Imbalance</th><th>Signs</th><th>Action</th></tr>
+<tr><td><b>Hyperkalemia</b></td><td>Peaked T &rarr; wide QRS &rarr; arrest; weakness</td><td>Ca (membrane) &rarr; insulin/glucose, albuterol (shift) &rarr; remove (diuretics, kayexalate, dialysis)</td></tr>
+<tr><td><b>Hypokalemia</b></td><td>Flat T, U waves, arrhythmia; often with &darr; Mg</td><td>Replace K <b>and Mg</b> (can't fix K without Mg)</td></tr>
+<tr><td><b>Hypercalcemia</b></td><td>"Stones, bones, groans, moans"; short QT</td><td>Fluids + calcitonin/bisphosphonate</td></tr>
+<tr><td><b>Hypocalcemia</b></td><td>Chvostek/Trousseau, tetany, long QT</td><td>IV calcium (central if possible)</td></tr>
+<tr><td><b>Hypermagnesemia</b></td><td>&darr; reflexes, resp depression, hypotension</td><td>Stop Mg, IV <b>calcium</b> antidote</td></tr>
+<tr><td><b>Hyponatremia</b></td><td>&darr;LOC, seizures if rapid/severe</td><td>Correct <b>slowly</b> (osmotic demyelination if too fast); hypertonic saline for severe symptoms</td></tr></table>
+<div class="warn"><b>Two "correct it slowly" traps:</b> sodium (too-fast &rarr; osmotic demyelination) and glucose/osmolality in HHS (too-fast &rarr; cerebral edema).</div>`},
+
+"Advocacy / Moral Agency": {hy:false, html:`
+<h3>Core concept</h3>
+<p>Professional Caring is a full <b>20%</b> of the exam and easy to lose points on because it feels "soft." It isn't &mdash; it's tested with clinical scenarios where the best answer reflects the AACN Synergy Model: match nurse competencies to patient needs.</p>
+<div class="key"><b>Advocacy/moral agency</b> = acting on behalf of the patient's values and rights, especially when they can't speak for themselves. On questions, the advocacy answer usually <b>protects patient autonomy, safety, and voice</b> &mdash; e.g., pausing to clarify an unclear/unsafe order, honoring an advance directive, escalating a concern up the chain.</p>
+<h3>The 8 Synergy competencies (quick anchor)</h3>
+<ul>
+<li><b>Advocacy/Moral Agency</b> &mdash; speak for the patient.</li>
+<li><b>Caring Practices</b> &mdash; compassionate, individualized environment.</li>
+<li><b>Collaboration</b> &mdash; work across the team; the patient/family are members.</li>
+<li><b>Systems Thinking</b> &mdash; use resources across the whole system.</li>
+<li><b>Response to Diversity</b> &mdash; incorporate cultural/individual differences into care.</li>
+<li><b>Clinical Inquiry</b> &mdash; question practice, use evidence/EBP.</li>
+<li><b>Facilitation of Learning</b> &mdash; teach patients, families, colleagues.</li>
+<li><b>Clinical Judgment</b> &mdash; clinical reasoning + nursing knowledge.</li>
+</ul>
+<div class="warn"><b>Strategy for these questions:</b> the credited answer is rarely "call the provider and do nothing" or "follow the order without question." Look for the choice that keeps the <b>patient's needs and safety</b> central while using the right resource/level of the team.</div>`}
+};
+
+/* System each subtopic belongs to, for quiz tagging */
+const SUB_TO_SYS = {};
+PLAN.forEach(s => s.subs.forEach(sub => SUB_TO_SYS[sub] = s.id));
+
+/* =====================================================================
+   QUESTION BANK  —  CCRN-format: clinical stem, 4 options, rationale.
+   sys = domain id; a = index (0-3) of correct answer.
+   ===================================================================== */
+const QBANK = [
+/* ---- Cardiovascular ---- */
+{sys:'cv',topic:'ACS',q:"A patient with an inferior STEMI becomes hypotensive (BP 82/50) shortly after receiving sublingual nitroglycerin. Lungs are clear. What is the priority action?",
+o:["Administer a 250&ndash;500 mL isotonic fluid bolus","Give a second dose of nitroglycerin","Start a nitroprusside infusion","Administer IV furosemide"],a:0,
+r:"Inferior STEMIs frequently involve the RV, which is <b>preload dependent</b>. Nitroglycerin drops preload and causes profound hypotension. The fix is a fluid bolus to restore preload &mdash; not more vasodilators or diuretics."},
+{sys:'cv',topic:'ACS',q:"Which patient presentation should raise the highest suspicion for an atypical acute coronary syndrome?",
+o:["A 45-year-old man with crushing substernal chest pain and diaphoresis","A 72-year-old woman with diabetes reporting new fatigue, nausea, and dyspnea","A 30-year-old with sharp pain that worsens with inspiration","A 55-year-old with chest wall tenderness reproducible on palpation"],a:1,
+r:"Women, older adults, and diabetics often present <b>without</b> classic chest pain &mdash; fatigue, dyspnea, nausea, or epigastric discomfort. This is a heavily tested pattern because the atypical presentation is easy to miss."},
+{sys:'cv',topic:'Cardiogenic shock',q:"A post-MI patient has CI 1.8, PCWP 24, SVR elevated, and MAP 58. Which finding most distinguishes this from hypovolemic shock?",
+o:["The low cardiac index","The elevated SVR","The elevated PCWP","The low MAP"],a:2,
+r:"Cardiogenic and hypovolemic shock both show low CI and high SVR. The <b>PCWP (preload)</b> separates them: elevated in cardiogenic (backward failure), low in hypovolemic. That's why a fluid bolus helps hypovolemia but worsens cardiogenic shock."},
+{sys:'cv',topic:'Tamponade',q:"A patient 6 hours post-cardiac surgery develops hypotension, rising CVP, JVD, and a sudden drop in chest tube output. What complication is most likely?",
+o:["Tension pneumothorax","Cardiac tamponade","Acute pulmonary embolus","Hypovolemic shock"],a:1,
+r:"A sudden <b>decrease in chest-tube drainage</b> with rising filling pressures and hypotension post-op suggests <b>clot causing tamponade</b>. Blood that can't drain compresses the heart. Escalate immediately for possible re-exploration."},
+{sys:'cv',topic:'Dysrhythmias',q:"A patient in monomorphic VT with a pulse becomes unresponsive with BP 68/40. What is the correct intervention?",
+o:["Amiodarone 150 mg IV over 10 minutes","Synchronized cardioversion","Defibrillation at 200 J","Vagal maneuvers"],a:1,
+r:"VT <b>with a pulse</b> that is <b>unstable</b> (hypotension, altered mental status) calls for <b>synchronized cardioversion</b>. Defibrillation is for pulseless VT/VF. Amiodarone is for the stable patient."},
+{sys:'cv',topic:'Dysrhythmias',q:"A patient develops torsades de pointes. In addition to defibrillation if pulseless, what is the priority medication?",
+o:["Magnesium sulfate","Adenosine","Calcium gluconate","Amiodarone"],a:0,
+r:"Torsades (polymorphic VT with prolonged QT) is treated with <b>IV magnesium</b>, and correcting the underlying QT prolongation/electrolytes. Amiodarone can prolong QT further."},
+{sys:'cv',topic:'Aortic dissection',q:"A patient with a suspected aortic dissection has BP 190/110 and HR 96. Which order should the nurse question if written to be given FIRST?",
+o:["Esmolol infusion","Nitroprusside infusion","Labetalol IV","Pain management with opioid"],a:1,
+r:"In dissection you must lower <b>shear stress</b> first with a beta-blocker before adding a vasodilator. Starting <b>nitroprusside alone</b> causes reflex tachycardia that increases shear and can extend the dissection. Beta-blockade first."},
+
+/* ---- Respiratory ---- */
+{sys:'resp',topic:'ARDS',q:"An ARDS patient on the ventilator has a PaO2 of 55 despite FiO2 increased to 90%. What ventilator change most directly addresses the problem?",
+o:["Increase the respiratory rate","Increase PEEP","Increase tidal volume to 10 mL/kg","Decrease the inspiratory time"],a:1,
+r:"Refractory hypoxemia in ARDS is driven by <b>shunt</b> (collapsed alveoli). <b>Increasing PEEP</b> recruits alveoli and improves oxygenation. Raising tidal volume violates lung-protective ventilation; more FiO2 alone can't fix shunt."},
+{sys:'resp',topic:'ARDS',q:"Which ventilator setting is the cornerstone lung-protective strategy proven to reduce mortality in ARDS?",
+o:["Tidal volume 4&ndash;6 mL/kg predicted body weight","Tidal volume 10&ndash;12 mL/kg actual body weight","Plateau pressure maintained above 35 cmH2O","FiO2 maintained at 100%"],a:0,
+r:"<b>Low tidal volume (4&ndash;6 mL/kg PBW)</b> with plateau pressure &lt;30 is the survival intervention in ARDS, limiting volutrauma to already-damaged alveoli."},
+{sys:'resp',topic:'PE',q:"A patient is 2 days post-op with sudden dyspnea, HR 122, SpO2 86%, and pleuritic chest pain. ABG shows respiratory alkalosis with hypoxemia. What is the most likely diagnosis?",
+o:["Acute pulmonary embolus","Cardiogenic pulmonary edema","Status asthmaticus","Tension pneumothorax"],a:0,
+r:"Sudden dyspnea, tachycardia, hypoxia, pleuritic pain, and <b>respiratory alkalosis</b> in a post-op (immobile) patient is the classic <b>PE</b> presentation from dead-space ventilation and CO2 washout."},
+{sys:'resp',topic:'Status asthmaticus',q:"A patient in status asthmaticus was tachypneic with loud wheezing. The nurse now notes a 'quiet chest' and a PaCO2 that has risen from 30 to 45. This indicates:",
+o:["The patient is improving and can be weaned off treatment","Impending respiratory failure requiring intubation readiness","Successful bronchodilator response","A need to decrease supplemental oxygen"],a:1,
+r:"A <b>silent chest</b> and a <b>normalizing/rising CO2</b> in a previously tachypneic asthmatic signal <b>severe air trapping and fatigue</b> &mdash; impending respiratory failure. This is a deterioration, not improvement."},
+{sys:'resp',topic:'Vent complications',q:"A ventilated patient suddenly desaturates and becomes agitated with a high-pressure alarm. After disconnecting and manually bagging, what is the nurse assessing?",
+o:["Whether the problem is the patient or the equipment","The patient's sedation depth","The need to increase PEEP","The FiO2 setting"],a:0,
+r:"Manual bagging (the 'B' approach with <b>DOPE</b>) separates a patient problem from a machine problem. If bagging is easy and sats improve, it's the equipment; if bagging is hard, look at the patient (obstruction, pneumothorax, tube displacement)."},
+{sys:'resp',topic:'ARF',q:"A COPD patient in acute respiratory failure has SpO2 84%. The nurse should titrate oxygen to a target SpO2 of approximately:",
+o:["100%","95&ndash;100%","88&ndash;92%","80&ndash;85%"],a:2,
+r:"In COPD, target <b>SpO2 88&ndash;92%</b>. Over-oxygenation can worsen hypercapnia and CO2 narcosis &mdash; but never leave them frankly hypoxic. Titrate to the window."},
+
+/* ---- Endocrine / Heme / GI / Renal / Integ ---- */
+{sys:'ehgri',topic:'DKA',q:"A patient in DKA has a serum potassium of 3.1 mEq/L. The provider orders an insulin infusion. What should the nurse do?",
+o:["Start the insulin infusion immediately","Hold insulin and notify the provider to replace potassium first","Give the insulin at half the ordered rate","Administer a potassium-sparing diuretic"],a:1,
+r:"Insulin drives potassium <b>into cells</b>. Starting insulin with K &lt;3.3 can cause <b>life-threatening hypokalemia</b> and arrhythmia. Replace potassium first, then start insulin."},
+{sys:'ehgri',topic:'DKA',q:"When treating DKA, what indicates the insulin infusion has done its job and can be transitioned?",
+o:["Blood glucose reaches 200 mg/dL","The anion gap closes / ketones clear","Urine output normalizes","The patient reports feeling better"],a:1,
+r:"The endpoint of DKA treatment is <b>closing the anion gap</b>, not just normalizing glucose. Dextrose is added around glucose 200 so insulin keeps running until the gap/ketones resolve."},
+{sys:'ehgri',topic:'HHS',q:"A patient presents with glucose 780, minimal ketones, pH 7.34, serum osmolality 340, and altered mental status. What is the priority intervention?",
+o:["High-dose insulin bolus","Aggressive isotonic fluid resuscitation","Sodium bicarbonate","Rapid correction of glucose to normal"],a:1,
+r:"This is <b>HHS</b> &mdash; profound dehydration with huge fluid deficits and minimal acidosis. <b>Fluids</b> are the priority. Glucose/osmolality must be corrected <b>gradually</b> to avoid cerebral edema."},
+{sys:'ehgri',topic:'HIT',q:"A patient on heparin for 6 days has a platelet drop from 240,000 to 110,000 and a new DVT. What is the priority action?",
+o:["Transfuse platelets","Stop all heparin and start a non-heparin anticoagulant","Continue heparin and add aspirin","Flush all lines with heparin to maintain patency"],a:1,
+r:"This is <b>HIT</b> &mdash; despite low platelets the danger is <b>thrombosis</b>. <b>Stop all heparin</b> (including flushes/coated lines) and start a non-heparin anticoagulant like argatroban. Do <b>not</b> transfuse platelets."},
+{sys:'ehgri',topic:'Transfusion',q:"Thirty minutes into a PRBC transfusion, a patient develops acute dyspnea and hypoxemia. Filling pressures are normal and there is no JVD. This is most consistent with:",
+o:["TACO (circulatory overload)","TRALI","Acute hemolytic reaction","Febrile non-hemolytic reaction"],a:1,
+r:"Acute hypoxemia within 6 hours with <b>normal</b> filling pressures points to <b>TRALI</b> (non-cardiogenic lung injury). TACO would show hypertension, JVD, and volume overload and responds to diuretics."},
+{sys:'ehgri',topic:'AKI',q:"An AKI patient has peaked T waves and a widening QRS. What is the FIRST medication to administer?",
+o:["Regular insulin with dextrose","IV calcium gluconate","Sodium polystyrene sulfonate","Albuterol nebulizer"],a:1,
+r:"With ECG changes from hyperkalemia, give <b>IV calcium first</b> to stabilize the cardiac membrane. Insulin/glucose and albuterol shift K intracellularly; kayexalate/dialysis remove it &mdash; but calcium buys time immediately."},
+
+/* ---- MSK / Neuro / Behavioral ---- */
+{sys:'mnb',topic:'Stroke',q:"A patient with an acute ischemic stroke is a thrombolytic candidate. What blood pressure must be achieved before administering alteplase?",
+o:["Below 185/110 mmHg","Below 220/120 mmHg","Below 140/90 mmHg","Any BP is acceptable"],a:0,
+r:"Before IV thrombolytics for ischemic stroke, BP must be <b>&lt;185/110</b> to reduce hemorrhagic conversion risk. Without tPA, higher pressures are tolerated to perfuse the penumbra."},
+{sys:'mnb',topic:'TBI',q:"A TBI patient develops hypertension with a widening pulse pressure, bradycardia, and irregular respirations. This represents:",
+o:["Adequate cerebral perfusion","Cushing's triad indicating impending herniation","Neurogenic shock","A normal response to sedation"],a:1,
+r:"<b>Cushing's triad</b> (hypertension/widening pulse pressure, bradycardia, irregular respirations) is a <b>late, ominous</b> sign of dangerously high ICP and impending herniation &mdash; act now."},
+{sys:'mnb',topic:'ICP',q:"Which is the earliest and most reliable indicator of increasing intracranial pressure?",
+o:["Fixed, dilated pupils","A change in level of consciousness","Cushing's triad","Decorticate posturing"],a:1,
+r:"A <b>change in LOC</b> is the earliest and most sensitive sign of rising ICP. Pupillary changes, Cushing's triad, and posturing are <b>late</b> findings."},
+{sys:'mnb',topic:'SCI',q:"A patient with a cervical spinal cord injury has BP 84/50 and HR 48, with warm, dry skin. This presentation is most consistent with:",
+o:["Hypovolemic shock","Neurogenic shock","Septic shock","Cardiogenic shock"],a:1,
+r:"<b>Neurogenic shock</b> from loss of sympathetic tone causes hypotension <b>with bradycardia</b> and warm, dry skin &mdash; unlike hypovolemic/other shock, which produce compensatory <b>tachycardia</b>."},
+{sys:'mnb',topic:'Stroke',q:"A patient with subarachnoid hemorrhage is at risk for cerebral vasospasm on days 4&ndash;14. Which medication is given to improve outcomes?",
+o:["Nimodipine","Mannitol","Labetalol","Phenytoin"],a:0,
+r:"<b>Nimodipine</b>, a calcium channel blocker, reduces vasospasm-related deficits after aneurysmal SAH and improves neurologic outcomes."},
+
+/* ---- Multisystem ---- */
+{sys:'multi',topic:'Sepsis',q:"A patient meets septic shock criteria. Which vasopressor is first-line to maintain MAP &ge;65 after adequate fluids?",
+o:["Dopamine","Norepinephrine","Phenylephrine","Vasopressin"],a:1,
+r:"<b>Norepinephrine</b> is the first-line vasopressor in septic shock (better survival, fewer arrhythmias than dopamine). Vasopressin is typically added second; epinephrine third."},
+{sys:'multi',topic:'Sepsis',q:"Which action in the sepsis hour-1 bundle should occur BEFORE administering broad-spectrum antibiotics when feasible?",
+o:["Obtaining blood cultures","Starting vasopressors","Giving the second liter of fluid","Measuring urine output"],a:0,
+r:"Obtain <b>blood cultures before antibiotics</b> to preserve diagnostic yield &mdash; but never significantly delay antibiotics in true septic shock if cultures can't be drawn quickly."},
+{sys:'multi',topic:'Shock',q:"A patient with anaphylactic shock has stridor and hypotension. What is the first-line treatment?",
+o:["IV diphenhydramine","IM epinephrine","IV methylprednisolone","Nebulized albuterol"],a:1,
+r:"<b>IM epinephrine</b> is first-line for anaphylaxis &mdash; it reverses airway edema, bronchospasm, and vasodilation. Antihistamines and steroids are adjuncts, not the priority."},
+{sys:'multi',topic:'Acid-base',q:"An ABG shows pH 7.30, PaCO2 60, HCO3 26. What is the primary disorder?",
+o:["Metabolic acidosis","Respiratory acidosis","Respiratory alkalosis","Metabolic alkalosis"],a:1,
+r:"Low pH with <b>high PaCO2</b> and a near-normal HCO3 = <b>respiratory acidosis</b> (pH and CO2 move opposite directions &rarr; respiratory problem). The kidneys haven't compensated yet."},
+{sys:'multi',topic:'Acid-base',q:"A septic patient has pH 7.28, PaCO2 30, HCO3 15, with an elevated anion gap. The most likely cause of the acidosis is:",
+o:["Lactic acidosis from hypoperfusion","Respiratory failure","Vomiting","Excess bicarbonate administration"],a:0,
+r:"High-anion-gap metabolic acidosis in sepsis is usually <b>lactic acidosis</b> from tissue hypoperfusion. The low PaCO2 reflects respiratory compensation (Kussmaul breathing)."},
+{sys:'multi',topic:'Electrolytes',q:"A patient's potassium remains low despite repeated replacement. What electrolyte should the nurse check that may be preventing correction?",
+o:["Calcium","Magnesium","Phosphate","Sodium"],a:1,
+r:"<b>Hypomagnesemia</b> causes refractory hypokalemia &mdash; you often can't correct potassium until magnesium is replaced. They travel together."},
+
+/* ---- Professional Caring ---- */
+{sys:'pc',topic:'Advocacy',q:"A nurse receives an order that appears unsafe for the patient's current condition. The action that best reflects advocacy/moral agency is to:",
+o:["Carry out the order as written to avoid conflict","Clarify the order with the provider and escalate the concern if unresolved","Refuse and document without further communication","Ask another nurse to give the medication"],a:1,
+r:"Advocacy means keeping the <b>patient's safety and voice</b> central: clarify the concern with the provider and escalate up the chain if unresolved. Silently complying or refusing without communication both fail the patient."},
+{sys:'pc',topic:'Response to diversity',q:"A patient's cultural beliefs conflict with a standard care recommendation. The response that best reflects the Synergy Model competency of Response to Diversity is to:",
+o:["Explain that hospital policy must be followed","Incorporate the patient's beliefs and preferences into an individualized plan","Ask the family to overrule the patient","Document refusal and move on"],a:1,
+r:"Response to Diversity means <b>integrating</b> the patient's cultural and individual differences into the plan of care, not overriding them. Individualized, patient-centered planning is the credited answer."},
+{sys:'pc',topic:'Clinical inquiry',q:"A nurse notices a unit practice that conflicts with current evidence. Demonstrating Clinical Inquiry, the nurse should:",
+o:["Continue the current practice since it's the unit norm","Question the practice and pursue evidence-based change","Wait for management to notice","Only change their own individual practice quietly"],a:1,
+r:"Clinical Inquiry is the competency of questioning practice and using <b>evidence/EBP</b> to improve care &mdash; raising the concern and pursuing evidence-based change reflects it."}
+];
+
+const QUESTION_TARGET = 100;
+const QUESTION_STYLES = {
+  cv:[
+    {stem:'A patient is being evaluated for {topic}. Which nursing focus is most important first?', answer:'Assess perfusion, rhythm, blood pressure trend, and signs of ischemia before choosing the intervention.', distract:['Encourage oral fluids and reassess at the end of the shift.','Delay action until the next scheduled cardiac enzyme result.','Place the patient flat and reduce monitoring to promote rest.'], rationale:'Cardiovascular questions usually hinge on perfusion and stability. Rhythm, MAP, ischemic symptoms, urine output, mentation, and hemodynamic trends tell you whether this is a watch, treat, or call-now problem.'},
+    {stem:'During care for {topic}, which finding would require the fastest escalation?', answer:'New hypotension with altered mentation, cool skin, or falling urine output.', distract:['A family member asks for a routine update.','Mild anxiety that improves with explanation.','A stable blood pressure with unchanged telemetry.'], rationale:'New signs of poor perfusion are high-risk in cardiovascular patients and often precede arrest or shock progression.'},
+    {stem:'Which order should be questioned in a patient whose presentation suggests {topic}?', answer:'A medication or action that could worsen preload, afterload, rhythm stability, or coronary perfusion without reassessment.', distract:['Continuous monitoring while symptoms are active.','Rapid escalation for unstable vital signs.','Focused reassessment after each intervention.'], rationale:'The exam often tests whether the nurse recognizes an intervention that makes the underlying hemodynamic problem worse.'}
+  ],
+  resp:[
+    {stem:'A patient with {topic} suddenly deteriorates. What should the nurse prioritize?', answer:'Assess airway, breathing, oxygenation, ventilation, and equipment/tube problems immediately.', distract:['Wait for the next scheduled chest x-ray before acting.','Decrease monitoring to reduce stimulation.','Offer oral fluids and reassess in 60 minutes.'], rationale:'Respiratory deterioration is an airway/breathing problem until proven otherwise. The nurse should rapidly assess patient, tube, lung, and equipment causes.'},
+    {stem:'Which assessment trend is most concerning during management of {topic}?', answer:'Increasing work of breathing with worsening gas exchange or mental status.', distract:['A stable respiratory rate with improving comfort.','A pulse oximetry value that improves after appropriate oxygen titration.','A cough that clears after suctioning.'], rationale:'Rising work of breathing, CO2 retention, or altered mentation can signal fatigue and impending respiratory failure.'},
+    {stem:'Which intervention best matches CCRN priorities for {topic}?', answer:'Match support to the mechanism: oxygenation, ventilation, airway obstruction, compliance, or dead-space mismatch.', distract:['Use the same oxygen and ventilator strategy for every respiratory disorder.','Avoid reassessing after ventilator changes.','Focus only on SpO2 and ignore the ABG and patient appearance.'], rationale:'Respiratory questions reward matching the therapy to the physiologic problem rather than treating every low saturation the same way.'}
+  ],
+  ehgri:[
+    {stem:'A patient is being treated for {topic}. Which action best reflects safe sequencing?', answer:'Verify the critical labs and correct the immediate life threat in the correct order.', distract:['Treat the number without assessing symptoms or trends.','Give the fastest medication available without checking contraindications.','Delay all interventions until every diagnostic result returns.'], rationale:'This domain often tests order-of-operations: potassium before insulin when low, calcium first for dangerous hyperkalemia, stop transfusion reactions immediately, and treat the precipitating cause.'},
+    {stem:'Which finding would most change the plan for {topic}?', answer:'A new life-threatening lab pattern paired with symptoms, ECG changes, bleeding, thrombosis, or organ dysfunction.', distract:['A single mildly abnormal value with no clinical change.','A resolved symptom from the prior shift.','A family question about visiting hours.'], rationale:'The CCRN exam pairs labs with clinical consequences. The dangerous answer is the lab pattern that is already affecting perfusion, clotting, kidney function, or neurologic status.'},
+    {stem:'Which response should the nurse avoid when caring for {topic}?', answer:'Using a routine intervention that worsens the underlying metabolic, renal, bleeding, or clotting problem.', distract:['Rechecking the patient after treatment.','Communicating a critical value promptly.','Reviewing medications for renal or bleeding risk.'], rationale:'Many wrong answers are routine actions in the wrong context, such as insulin before potassium safety or platelets in suspected HIT.'}
+  ],
+  mnb:[
+    {stem:'A patient is admitted with {topic}. What is the best first nursing focus?', answer:'Protect neurologic function by preventing hypoxia, hypotension, injury, and delayed recognition of deterioration.', distract:['Cluster all neurologic checks at the end of the shift.','Offer sedatives before assessing the neurologic baseline.','Allow oral intake before safety screening when stroke is possible.'], rationale:'Neuro questions center on preventing secondary injury and trending subtle changes before they become late signs.'},
+    {stem:'Which change is most concerning in a patient with {topic}?', answer:'A new change in level of consciousness, pupils, motor response, seizure activity, or safety risk.', distract:['A stable exam that matches the prior documented baseline.','A mild headache relieved with ordered therapy and no neuro change.','Family anxiety without patient deterioration.'], rationale:'A neurologic change from baseline is often the earliest high-yield warning sign and requires prompt reassessment/escalation.'},
+    {stem:'Which action best supports safe care for {topic}?', answer:'Use focused neurologic assessment, safety precautions, and early escalation for signs of secondary injury.', distract:['Wait for severe late signs before notifying the team.','Ignore psychosocial drivers of agitation or non-adherence.','Treat every patient with the same sedation approach.'], rationale:'The best answer combines neurologic protection with patient-specific safety and communication.'}
+  ],
+  multi:[
+    {stem:'A patient with {topic} is worsening. Which priority best fits multisystem CCRN care?', answer:'Identify the failing system, support perfusion/oxygen delivery, and reassess response to treatment.', distract:['Focus on one lab value and ignore perfusion.','Delay treatment until the full diagnosis is certain.','Avoid escalation until the patient arrests.'], rationale:'Multisystem questions test recognition of shock, sepsis, acid-base, electrolyte, toxin, burn, or end-of-life patterns and reassessment after intervention.'},
+    {stem:'Which trend is most urgent in {topic}?', answer:'Worsening mentation, MAP, lactate, urine output, temperature instability, or organ dysfunction.', distract:['A stable vital sign trend with improving symptoms.','A completed family teaching form.','A noncritical lab that is unchanged from baseline.'], rationale:'Perfusion and organ dysfunction trends are more important than isolated data points.'},
+    {stem:'What is the best way to avoid a common CCRN trap in {topic}?', answer:'Treat the reversible killer first while considering the specific cause, not just the category label.', distract:['Use the same fluid and pressor strategy for every shock state.','Correct sodium, glucose, and osmolality as rapidly as possible.','Ignore goals of care until all invasive options are exhausted.'], rationale:'Multisystem traps include one-size-fits-all shock treatment, unsafe rapid correction, and missing the patient’s goals.'}
+  ],
+  pc:[
+    {stem:'A situation involving {topic} creates tension between the plan of care and patient needs. What response is best?', answer:'Clarify the patient’s values and safety needs, communicate with the team, and escalate unresolved concerns appropriately.', distract:['Carry out the plan without question to avoid conflict.','Exclude the patient or family from the discussion.','Document the concern but avoid speaking with anyone.'], rationale:'Professional Caring questions reward advocacy, collaboration, respectful communication, and patient-centered safety.'},
+    {stem:'Which action best reflects the Synergy Model when addressing {topic}?', answer:'Match nursing competencies and resources to the patient and family’s current needs.', distract:['Use the same communication style for every patient.','Assume culture and preferences are unrelated to care.','Wait for another discipline to identify safety concerns.'], rationale:'The Synergy Model asks the nurse to respond to patient characteristics with the right competency, communication, and resources.'},
+    {stem:'Which answer is least consistent with Professional Caring for {topic}?', answer:'Ignoring patient voice, diversity, evidence, or safety to preserve convenience.', distract:['Using evidence to question practice.','Collaborating with the interprofessional team.','Teaching in a way the learner can understand.'], rationale:'Professional Caring is active, not passive. The nurse protects patient voice, safety, learning, and ethical practice.'}
+  ]
+};
+
+function makeGeneratedQuestions(bankLabel, target, used){
+  const out=[];
+  let serial=1;
+  while(out.length<target && serial<3000){
+    const sys=PLAN[(serial-1)%PLAN.length];
+    const subs=sys.subs;
+    const topic=subs[Math.floor((serial-1)/PLAN.length)%subs.length];
+    const styles=QUESTION_STYLES[sys.id]||QUESTION_STYLES.multi;
+    const style=styles[(serial-1)%styles.length];
+    const stem=`${bankLabel} ${serial}: ${style.stem.replace('{topic}', topic)}`;
+    if(!used.has(stem)){
+      const correctSlot=(serial + bankLabel.length)%4;
+      const options=[];
+      style.distract.forEach(x=>options.push(x));
+      options.splice(correctSlot,0,style.answer);
+      out.push({
+        sys:sys.id,
+        topic,
+        q:stem,
+        o:options,
+        a:correctSlot,
+        r:`${style.rationale} <b>Topic:</b> ${topic}.`
+      });
+      used.add(stem);
+    }
+    serial++;
+  }
+  return out;
+}
+
+const usedQuestionStems = new Set(QBANK.map(q=>q.q));
+if(QBANK.length<QUESTION_TARGET){
+  QBANK.push(...makeGeneratedQuestions('Quiz bank', QUESTION_TARGET-QBANK.length, usedQuestionStems));
+}
+const PRACTICE_EXAMS = {
+  exam1: makeGeneratedQuestions('Practice Exam 1', 150, usedQuestionStems),
+  exam2: makeGeneratedQuestions('Practice Exam 2', 150, usedQuestionStems)
+};
+
+/* =====================================================================
+   STATE + PERSISTENCE  (localStorage where available; degrades to memory)
+   ===================================================================== */
+const store = (()=>{
+  let mem={};
+  const ok=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
+  return {
+    get(k,d){try{if(ok){const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}}catch(e){}return k in mem?mem[k]:d;},
+    set(k,v){try{if(ok){localStorage.setItem(k,JSON.stringify(v));return}}catch(e){}mem[k]=v;}
+  };
+})();
+let progress = store.get('ccrn_progress', {}); // {subtopic: {chk:{}, }}
+let weak = store.get('ccrn_weak', {});          // {topic: count}
+let cloudSync = { ready:false, docRef:null, setDoc:null, onSnapshot:null, serverTimestamp:null, saveTimer:null, applying:false };
+function saveProgress(){
+  store.set('ccrn_progress',progress);
+  store.set('ccrn_weak',weak);
+  scheduleCloudSave();
+}
+function hasCloudConfig(){
+  const cfg=window.CCRN_FIREBASE_CONFIG||{};
+  return cfg.apiKey && !String(cfg.apiKey).includes('PASTE_') && cfg.projectId && !String(cfg.projectId).includes('PASTE_');
+}
+function setSyncText(msg){
+  const el=document.getElementById('syncStatus');
+  if(el) el.textContent=msg;
+}
+function scheduleCloudSave(){
+  if(!cloudSync.ready || cloudSync.applying) return;
+  clearTimeout(cloudSync.saveTimer);
+  cloudSync.saveTimer=setTimeout(saveCloudState,450);
+}
+async function saveCloudState(){
+  if(!cloudSync.ready) return;
+  try{
+    await cloudSync.setDoc(cloudSync.docRef,{
+      progress,
+      weak,
+      updatedAt:cloudSync.serverTimestamp()
+    },{merge:true});
+    setSyncText('Synced');
+  }catch(e){
+    setSyncText('Saved on this device');
+  }
+}
+async function initCloudSync(){
+  if(!hasCloudConfig()){
+    setSyncText('Saved on this device');
+    return;
+  }
+  try{
+    setSyncText('Connecting...');
+    const appMod=await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
+    const authMod=await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+    const fireMod=await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
+    const app=appMod.initializeApp(window.CCRN_FIREBASE_CONFIG);
+    const auth=authMod.getAuth(app);
+    await authMod.signInAnonymously(auth);
+    const db=fireMod.getFirestore(app);
+    const path=(window.CCRN_FIREBASE_DOC_PATH||'study/adult-ccrn-hub').split('/');
+    cloudSync={...cloudSync,ready:true,docRef:fireMod.doc(db,...path),setDoc:fireMod.setDoc,onSnapshot:fireMod.onSnapshot,serverTimestamp:fireMod.serverTimestamp};
+    const snap=await fireMod.getDoc(cloudSync.docRef);
+    if(snap.exists()){
+      const data=snap.data()||{};
+      cloudSync.applying=true;
+      progress=data.progress||progress||{};
+      weak=data.weak||weak||{};
+      store.set('ccrn_progress',progress);
+      store.set('ccrn_weak',weak);
+      cloudSync.applying=false;
+      renderLibrary();
+      renderQuizChips();
+    } else {
+      await saveCloudState();
+    }
+    cloudSync.onSnapshot(cloudSync.docRef,snap=>{
+      if(!snap.exists()) return;
+      const data=snap.data()||{};
+      cloudSync.applying=true;
+      progress=data.progress||{};
+      weak=data.weak||{};
+      store.set('ccrn_progress',progress);
+      store.set('ccrn_weak',weak);
+      cloudSync.applying=false;
+      renderLibrary();
+      if(document.getElementById('view-progress').classList.contains('active')) renderProgress();
+      setSyncText('Synced');
+    });
+    setSyncText('Synced');
+  }catch(e){
+    setSyncText('Saved on this device');
+  }
+}
+function escHtml(value){
+  const div=document.createElement('div');
+  div.textContent=value==null?'':String(value);
+  return div.innerHTML;
+}
+function jsArg(value){
+  return String(value).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+/* =====================================================================
+   TABS
+   ===================================================================== */
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v));
+  if(v==='progress') renderProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('tabs').addEventListener('click',e=>{
+  if(e.target.classList.contains('tab')) showView(e.target.dataset.view);
+});
+
+/* =====================================================================
+   BLUEPRINT
+   ===================================================================== */
+let weeks=6;
+function renderBlueprint(){
+  const total=Math.max(0,parseInt(document.getElementById('totalHrs').value)||0);
+  // weighted allocation
+  const weighted=PLAN.map(s=>({...s,w:s.pct*(WEIGHT_ADJ[s.id]||1)}));
+  const wsum=weighted.reduce((a,s)=>a+s.w,0);
+  const rows=weighted.map(s=>{
+    const hrs=total*s.w/wsum;
+    return {...s,hrs};
+  });
+  const maxHrs=Math.max(...rows.map(r=>r.hrs));
+  document.getElementById('bpBars').innerHTML=rows.map(r=>`
+    <div class="bar-row">
+      <div class="bar-name">${r.name.split(' / ')[0].length>26?r.name.slice(0,26)+'&hellip;':r.name}
+        <small>${r.subs.length} subtopics${r.kind==='caring'?' &middot; ethics/practice':''}</small></div>
+      <div class="bar-track"><div class="bar-fill ${r.kind==='caring'?'pc':''}" style="width:${(r.hrs/maxHrs*100).toFixed(1)}%"></div></div>
+      <div class="bar-meta"><b>${r.hrs.toFixed(1)}h</b> <small>&middot; ${r.pct}%</small><br>
+        <small>${(r.hrs/weeks).toFixed(1)}h/wk</small></div>
+    </div>`).join('');
+  const perWeek=total/weeks;
+  document.getElementById('perWeek').textContent=perWeek.toFixed(1)+' h';
+  document.getElementById('perDay').textContent='~'+(perWeek/7).toFixed(1)+' h/day';
+}
+document.getElementById('totalHrs').addEventListener('input',renderBlueprint);
+document.getElementById('weeksSeg').addEventListener('click',e=>{
+  if(e.target.dataset.wk){
+    weeks=parseInt(e.target.dataset.wk);
+    document.querySelectorAll('#weeksSeg button').forEach(b=>b.classList.toggle('on',b===e.target));
+    renderBlueprint();
+  }
+});
+
+/* =====================================================================
+   LIBRARY
+   ===================================================================== */
+function subState(sub){
+  const p=progress[sub];
+  if(!p) return '';
+  const chks=p.chk?Object.values(p.chk).filter(Boolean).length:0;
+  const totalChk=5;
+  if(chks>=totalChk) return 'done';
+  if(chks>0 || (p.notes && p.notes.trim())) return 'has';
+  return '';
+}
+function renderLibrary(){
+  document.getElementById('libraryList').innerHTML=PLAN.map(sys=>`
+    <div class="card">
+      <div class="sys-head" onclick="toggleSys(this)">
+        <span class="chev">&#9654;</span>
+        <span class="sys-title">${sys.name}</span>
+        <span class="sys-pct"><span class="pill ${sys.kind==='caring'?'plump':'tealp'}">${sys.pct}% of exam</span></span>
+      </div>
+      <div class="sys-body">
+        <div class="sub-grid">
+          ${sys.subs.map(sub=>{
+            const hasContent=!!CONTENT[sub];
+            const st=subState(sub);
+            return `<button class="sub ${st}" onclick="openReader('${jsArg(sub)}')">
+              <span class="dot"></span>
+              <span class="nm">${sub}</span>
+              ${hasContent&&CONTENT[sub].hy?'<span class="star" title="High-yield">&#9733;</span>':''}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleSys(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');}
+
+/* =====================================================================
+   READER
+   ===================================================================== */
+const CHK_LABELS=['Patho/Hemodynamics','Assessment/Diagnostics','Nursing/Meds','Practice questions','Reviewed'];
+const DOMAIN_DEPTH = {
+  cv:{
+    domain:'cardiovascular instability',
+    mechanisms:'preload, afterload, contractility, coronary perfusion, rhythm generation, vascular integrity, and oxygen delivery',
+    data:'12-lead ECG, rhythm strip, MAP, pulse pressure, capillary refill, urine output, lactate, troponin pattern, bedside echo findings, central/PA pressures when used, chest-tube trends after surgery, and the patient response to each intervention',
+    priorities:'protect perfusion, identify unstable rhythm or ischemia, correct reversible causes, prepare for reperfusion or procedural rescue, and avoid medications that worsen the hemodynamic state',
+    watch:'hypotension, new altered mental status, cool mottled skin, falling urine output, chest pain with ECG change, malignant dysrhythmia, rising lactate, and sudden loss of drainage after cardiac surgery',
+    traps:'treating a preload-dependent patient with preload reduction, confusing cardiogenic and hypovolemic shock, delaying synchronized cardioversion in unstable tachycardia, or focusing on a lab before perfusion'
+  },
+  resp:{
+    domain:'respiratory failure and gas exchange',
+    mechanisms:'oxygenation, ventilation, airway patency, pulmonary vascular flow, alveolar recruitment, compliance, resistance, dead-space ventilation, and work of breathing',
+    data:'SpO2 trend, ABG, respiratory pattern, accessory-muscle use, breath sounds, peak and plateau pressures, ETCO2, chest imaging, secretions, tube position, ventilator waveforms, and response to oxygen or pressure changes',
+    priorities:'secure the airway, correct oxygenation or ventilation failure, troubleshoot patient-versus-equipment problems, use lung-protective strategies when indicated, and prevent complications of ventilation',
+    watch:'rising CO2 with fatigue, worsening hypoxemia despite oxygen, sudden high- or low-pressure alarms, absent breath sounds, agitation with desaturation, and hemodynamic collapse after positive-pressure ventilation',
+    traps:'assuming a quiet chest is improvement, increasing tidal volume to fix ARDS, ignoring auto-PEEP, over-oxygenating COPD without a target range, or treating the ventilator number without assessing the patient'
+  },
+  ehgri:{
+    domain:'metabolic, hematologic, gastrointestinal, renal, immune, and integumentary failure',
+    mechanisms:'hormonal regulation, fluid shifts, electrolyte movement, acid-base buffering, coagulation balance, immune defense, tissue perfusion, renal clearance, nutrition, and skin integrity',
+    data:'glucose, anion gap, serum osmolality, potassium, creatinine, urine output, coagulation studies, platelet trend, hemoglobin, lactate, liver tests, abdominal assessment, wound appearance, temperature, and medication exposure',
+    priorities:'sequence treatments safely, correct life-threatening lab patterns, stop the offending exposure, treat the precipitating illness, protect renal and tissue perfusion, and monitor for rapid decompensation',
+    watch:'ECG change with potassium disturbance, severe acidosis, altered mentation with osmolality shift, active bleeding, new thrombosis, transfusion respiratory distress, oliguria, peritonitis signs, and spreading soft-tissue infection',
+    traps:'starting insulin before potassium safety, transfusing platelets in suspected HIT, confusing TRALI with TACO, correcting sodium or osmolality too quickly, or treating a single number while missing organ dysfunction'
+  },
+  mnb:{
+    domain:'neurologic, musculoskeletal, and behavioral safety',
+    mechanisms:'cerebral perfusion, intracranial pressure, spinal cord autonomic control, neuromuscular transmission, tissue compartment pressure, pain/agitation physiology, delirium, withdrawal, and secondary injury',
+    data:'level of consciousness, GCS or NIHSS, pupils, motor/sensory response, seizure activity, ICP/CPP when monitored, pain and agitation scales, delirium screening, withdrawal scores, extremity neurovascular checks, and immediate safety risk',
+    priorities:'prevent hypoxia and hypotension, trend neurologic changes, protect CPP and spinal alignment, manage seizures and agitation safely, use de-escalation when possible, and escalate early for secondary injury',
+    watch:'new change in level of consciousness, pupillary change, Cushing pattern, seizure activity, new weakness, bradycardia with hypotension after spinal injury, pain out of proportion, and violence or self-harm risk',
+    traps:'waiting for late neurologic signs, hyperventilating TBI too long, giving oral intake before stroke swallow screening, missing neurogenic shock bradycardia, or using restraints/sedation before assessing the cause of agitation'
+  },
+  multi:{
+    domain:'whole-body critical illness and organ dysfunction',
+    mechanisms:'oxygen delivery, tissue perfusion, inflammation, infection response, acid-base compensation, electrolyte stability, toxin exposure, thermoregulation, pain physiology, nutrition, and goals-of-care alignment',
+    data:'MAP, lactate, urine output, mentation, skin perfusion, ABG, electrolytes, temperature, cultures, source assessment, organ dysfunction trend, fluid responsiveness, medication exposure, and patient/family goals',
+    priorities:'recognize shock or sepsis early, support perfusion and oxygen delivery, treat reversible killers, reassess after interventions, coordinate source control or antidotes, and align treatment intensity with goals of care',
+    watch:'rising lactate, persistent hypotension, altered mentation, refractory hypoxemia, dangerous electrolytes, worsening acidosis, oliguria, new organ failure, toxin signs, malignant hyperthermia pattern, and uncontrolled suffering',
+    traps:'delaying antibiotics for perfect cultures, using pressors as the only answer to obstructive shock, rapidly correcting sodium or osmolality, missing calcium-first hyperkalemia treatment, or ignoring palliative priorities'
+  },
+  pc:{
+    domain:'professional caring and ethical practice',
+    mechanisms:'patient autonomy, moral agency, communication, cultural humility, collaboration, evidence-based practice, learning readiness, system resources, and matching nurse competencies to patient needs',
+    data:'patient values, decision-making capacity, family understanding, informed consent, advance directives, cultural and language needs, safety concerns, team conflict, evidence gaps, discharge learning barriers, and available resources',
+    priorities:'protect patient voice and safety, clarify unsafe plans, escalate unresolved concerns, teach in a way the learner can use, collaborate across disciplines, and use evidence to improve practice',
+    watch:'orders that conflict with patient safety, excluded decision makers, misunderstanding due to language or culture, moral distress, unsafe delegation, unresolved team conflict, and learning plans that ignore readiness or literacy',
+    traps:'choosing passive answers, treating advocacy as conflict, ignoring diversity, calling the provider without nursing assessment, following an unsafe order, or excluding the patient and family from care planning'
+  }
+};
+
+function topicCue(sub, sysId){
+  const t=sub.toLowerCase();
+  const base={
+    mechanism:'trace the condition from the first physiologic change to the bedside consequence that could destabilize the patient',
+    assessment:'look for trend changes rather than isolated findings, and connect abnormal data to perfusion, oxygen delivery, neurologic function, or safety',
+    priority:'stabilize the immediate threat, reassess the response, and escalate when the patient does not improve quickly',
+    complications:'shock, respiratory failure, dysrhythmia, bleeding, infection, renal injury, neurologic decline, and harm from delayed recognition',
+    memory:'mechanism first, patient trend second, intervention sequence third'
+  };
+  if(/shock|sepsis|sirs|mods/.test(t)) return {...base, mechanism:'separate distributive, cardiogenic, hypovolemic, and obstructive physiology by cardiac output, vascular tone, preload, and tissue perfusion', assessment:'trend MAP, lactate, mentation, urine output, skin perfusion, source clues, and response to fluids or vasoactive support', priority:'restore perfusion while treating the cause, using fluids, vasopressors, inotropes, antibiotics, source control, or mechanical relief as the physiology requires', complications:'refractory hypotension, myocardial depression, acute kidney injury, ARDS, coagulopathy, and multiple organ dysfunction', memory:'shock questions are won by matching the treatment to the hemodynamic pattern'};
+  if(/dysrhythm|conduction|qt|wpw|cardiac/.test(t)) return {...base, mechanism:'connect the rhythm or structural problem to cardiac output, coronary perfusion, thromboembolic risk, or sudden deterioration', assessment:'pair rhythm interpretation with pulse, blood pressure, mentation, ischemic symptoms, electrolyte pattern, and medication exposure', priority:'use the stable-versus-unstable algorithm, prepare cardioversion or defibrillation when indicated, and correct reversible causes', complications:'ventricular dysrhythmia, stroke, cardiogenic shock, syncope, cardiac arrest, and medication-related worsening', memory:'the monitor matters, but the patient decides the urgency'};
+  if(/ventilat|ards|respiratory|pulmonary|airway|thoracic|asthma|copd|pneumonia|embolus|pleural/.test(t)) return {...base, mechanism:'define whether the problem is oxygenation failure, ventilation failure, airway obstruction, decreased compliance, shunt, dead space, or pulmonary vascular obstruction', assessment:'combine work of breathing, ABG, SpO2, ETCO2, breath sounds, imaging, ventilator pressures, and response to oxygen or pressure support', priority:'support airway and breathing, troubleshoot DOPE when sudden deterioration occurs, and choose oxygen or ventilator changes based on the mechanism', complications:'respiratory arrest, barotrauma, auto-PEEP hypotension, ventilator-associated pneumonia, shock, and refractory hypoxemia', memory:'low oxygen is not one problem; identify the gas-exchange mechanism'};
+  if(/dka|hhs|diabetes|glucose|siadh|diabetes insipidus|thyroid|adrenal|electrolyte|acid-base/.test(t)) return {...base, mechanism:'follow hormone, fluid, electrolyte, and acid-base shifts from the lab abnormality to the organ at risk', assessment:'trend glucose, osmolality, sodium, potassium, pH, bicarbonate, anion gap, urine output, mentation, and ECG changes', priority:'sequence correction safely, especially fluids, potassium, insulin, sodium/osmolality, and the precipitating cause', complications:'arrhythmia, cerebral edema, osmotic demyelination, seizures, shock, and acute kidney injury', memory:'metabolic questions are order-of-operations questions'};
+  if(/coagul|dic|itp|hit|anemia|transfusion|hemorrhage|myelosuppression|oncologic|tls|blood/.test(t)) return {...base, mechanism:'decide whether the patient is bleeding, clotting, destroying cells, reacting to a transfusion, or unable to mount an immune response', assessment:'trend platelets, hemoglobin, PT/INR, aPTT, fibrinogen, D-dimer, temperature, oxygenation, volume status, and new thrombosis or bleeding', priority:'stop the trigger when present, protect perfusion and oxygenation, replace products appropriately, and escalate life-threatening reactions quickly', complications:'hemorrhage, thrombosis, TRALI, TACO, DIC, shock, infection, and renal injury from hemolysis', memory:'low platelets do not always mean bleeding risk is the main danger'};
+  if(/kidney|renal|aki|ckd|urosepsis|infiltration|cellulitis|fasciitis|pressure|skin|wound/.test(t)) return {...base, mechanism:'link perfusion, inflammation, infection, obstruction, nephrotoxins, or tissue pressure to loss of organ or tissue function', assessment:'watch urine output, creatinine trend, potassium, acid-base status, skin changes, pain, pulses, temperature, drainage, and signs of spreading infection', priority:'protect perfusion, remove or stop the cause, prevent complications, and recognize when dialysis, debridement, or urgent escalation is needed', complications:'hyperkalemic arrest, sepsis, compartment-like tissue injury, necrosis, fluid overload, and chronic functional decline', memory:'renal and skin questions punish delayed recognition'};
+  if(/stroke|brain|neuro|seizure|spinal|hydrocephalus|encephalopathy|death|storming|lesion|neurosurgery|tbi/.test(t)) return {...base, mechanism:'connect perfusion, pressure, bleeding, ischemia, seizure activity, spinal cord disruption, or inflammation to neurologic function', assessment:'trend LOC, pupils, motor response, GCS or NIHSS, ICP/CPP when present, seizure activity, glucose, temperature, and new focal deficits', priority:'prevent secondary injury by avoiding hypoxia and hypotension, protecting CPP, maintaining safety, and activating time-sensitive pathways', complications:'herniation, seizure, aspiration, rebleeding, vasospasm, neurogenic shock, and permanent neurologic disability', memory:'the earliest neurologic change is often the most important finding'};
+  if(/agitation|aggression|delirium|adherence|mood|pics|ptsd|self-harm|substance|suicidal|violence/.test(t)) return {...base, mechanism:'identify physiologic, medication, withdrawal, pain, sleep, fear, cognitive, and psychiatric drivers before labeling behavior as noncompliance', assessment:'screen for delirium, withdrawal, pain, hypoxia, hypoglycemia, infection, medication effects, capacity, immediate danger, and support systems', priority:'protect safety with the least restrictive effective strategy, treat reversible causes, communicate clearly, and involve appropriate resources early', complications:'self-harm, staff injury, aspiration, device removal, prolonged ICU stay, PTSD, and loss of trust', memory:'behavioral questions still begin with assessment and safety'};
+  if(/advocacy|caring|inquiry|collaboration|learning|diversity|systems/.test(t)) return {...base, mechanism:'apply the Synergy Model by matching the nurse competency to the patient or family need in the scenario', assessment:'listen for patient values, cultural context, readiness to learn, safety risk, evidence gaps, team communication failures, and system barriers', priority:'act to protect autonomy, safety, understanding, and continuity while using the right chain of communication', complications:'moral distress, unsafe care, inequity, poor adherence, preventable harm, and team breakdown', memory:'the best answer is active, patient-centered, and safety-focused'};
+  return base;
+}
+
+function studyBullets(items, cls='study-list'){
+  return `<ul class="${cls}">${items.map(item=>`<li>${item}</li>`).join('')}</ul>`;
+}
+
+function deepDiveHtml(sub, sysId, alreadyHasContent=false){
+  const lens=DOMAIN_DEPTH[sysId]||DOMAIN_DEPTH.multi;
+  const cue=topicCue(sub, sysId);
+  const safe=escHtml(sub);
+  const lead=alreadyHasContent?'Additional current CCRN coverage':'Current CCRN deep dive';
+  return `
+    <h3>${lead}</h3>
+    <div class="deep-dive-note"><b>Source frame:</b> Built around the current Adult CCRN test plan, which emphasizes Clinical Judgment plus Professional Caring/Ethical Practice, and around current critical-care priorities such as early recognition, monitoring trends, safe intervention sequencing, and reassessment. Use facility policy and provider orders for bedside care; use this page for exam preparation.</div>
+    <div class="topic-scan">
+      <div class="scan-card"><b>Why it matters</b><span>${safe} can shift from a familiar ICU problem to organ failure, unsafe sequencing, or a missed rescue opportunity.</span></div>
+      <div class="scan-card"><b>Mechanism</b><span>${cue.mechanism}.</span></div>
+      <div class="scan-card"><b>Watch first</b><span>${lens.watch}.</span></div>
+      <div class="scan-card"><b>Memory hook</b><span>${cue.memory}.</span></div>
+    </div>
+    <div class="study-stack">
+      <section class="study-section">
+        <h4>1. Big Picture</h4>
+        ${studyBullets([
+          `<b>${safe}</b> belongs in the CCRN blueprint because the nurse has to recognize deterioration before the patient reaches a late sign.`,
+          `For exam study, do not memorize the title alone. Start by naming what is failing, what is compensating, and what will harm the patient first.`,
+          `In the <b>${lens.domain}</b> domain, the exam rewards early recognition, trend interpretation, safe prioritization, monitoring, and reassessment.`,
+          `A strong answer usually names the patient problem, decides whether the data show compensation or decompensation, and chooses an action that protects oxygen delivery, perfusion, neurologic function, or safety.`
+        ])}
+      </section>
+      <section class="study-section">
+        <h4>2. Pathophysiology and Progression</h4>
+        ${studyBullets([
+          `Study the pathophysiology as a sequence: the initiating injury or disease process, the compensatory response, and the point where compensation begins to fail.`,
+          `For this topic, the useful mental model is: <b>${cue.mechanism}</b>.`,
+          `That model tells you which organs are vulnerable, which vital-sign changes matter, and which intervention could help or harm.`,
+          `In CCRN-style questions, the patient may show only a vague trend: increasing oxygen need, falling urine output, changing mental status, widening pulse pressure, rising lactate, a new rhythm, a worsening lab pattern, or a behavior change.`,
+          `Tie those findings back to <b>${lens.mechanisms}</b>, then decide whether the patient is stable, unstable, improving, or quietly tiring out.`
+        ])}
+      </section>
+      <section class="study-section">
+        <h4>3. Assessment and Diagnostics</h4>
+        ${studyBullets([
+          `Assessment starts with the patient in front of you, then moves to data. High-yield nursing assessment includes <b>${cue.assessment}</b>.`,
+          `In this system, watch: ${lens.data}.`,
+          `Trends show judgment. A single normal value may be less reassuring than a worsening pattern, and an abnormal value is more urgent when paired with shock, hypoxemia, bleeding, neurologic change, or unsafe behavior.`,
+          `Document what changed, when it changed, what intervention was tried, and how the patient responded.`,
+          `If a diagnostic test is pending, decide whether waiting is safe. Many correct answers involve notifying the team, activating a pathway, preparing equipment, drawing ordered labs, or reassessing immediately rather than passively waiting.`
+        ])}
+      </section>
+      <section class="study-section">
+        <h4>4. Nursing Priorities and Management</h4>
+        ${studyBullets([
+          `The safest priority is to treat the immediate threat while preparing for definitive management.`,
+          `For ${safe}, the nurse should <b>${cue.priority}</b>.`,
+          `Across this domain, nursing care centers on this pattern: ${lens.priorities}.`,
+          `Confirm the patient is monitored, check airway and circulation, verify medication safety, anticipate complications, and reassess after every meaningful change.`,
+          `For medications, know the desired effect, what parameter proves it is working, what adverse effect could make the patient worse, and what contraindication should make you question the order.`,
+          `For procedures, know what to prepare, what to monitor during it, and what complication would appear first at the bedside.`
+        ])}
+      </section>
+      <section class="study-section">
+        <h4>5. Complications and Rescue Cues</h4>
+        ${studyBullets([
+          `Keep the complication list short enough to recall under pressure but broad enough to protect the patient: ${cue.complications}.`,
+          `Immediate red flags include: ${lens.watch}.`,
+          `A CCRN answer is often built around the rescue cue: the finding that changes a routine plan into an urgent response.`,
+          `When you review this topic, write one rescue cue, one first action, and one action to avoid because it could worsen the physiology.`,
+          `If a practice question surprises you, ask whether you missed the mechanism, the trend, the priority order, or the trap.`
+        ])}
+      </section>
+    </div>
+    <div class="warn"><b>Exam trap for ${safe}:</b> ${lens.traps}. For this exact subtopic, remember: ${cue.memory}. If two answers look reasonable, choose the one that first protects the patient from the fastest reversible harm.</div>`;
+}
+
+function panelParagraphs(label, sub, sysId){
+  const lens=DOMAIN_DEPTH[sysId]||DOMAIN_DEPTH.multi;
+  const cue=topicCue(sub, sysId);
+  const safe=escHtml(sub);
+  const shared=`This is written for CCRN studying, so the goal is not to replace a textbook chapter or facility protocol. The goal is to make the bedside pattern easy to recognize in a timed question and easy to connect with a safe nursing action.`;
+  if(label==='Core concept') return [
+    `The core concept for ${safe} is the physiologic story underneath the diagnosis. Begin by naming the problem in plain language: what is failing, what is compensating, and what will harm the patient first if the trend continues? For this subtopic, focus on how to ${cue.mechanism}. That mechanism is the reason certain findings matter and certain interventions are dangerous. A CCRN stem may never say the diagnosis directly; it may give you a pattern of vitals, labs, device data, or behavior and expect you to recognize the underlying process.`,
+    `In the current Adult CCRN blueprint, this topic fits under ${lens.domain}. That means the exam is likely to ask about nursing judgment: early recognition, interpretation of trends, safe prioritization, monitoring, and response to decompensation. Study ${safe} by linking it to ${lens.mechanisms}. If you can explain how the condition affects oxygen delivery, perfusion, neurologic function, infection risk, bleeding or clotting risk, tissue integrity, or patient autonomy, you are studying at the right level.`,
+    `A practical way to learn the core is to write a three-line chain: cause, consequence, rescue. The cause is the disease or trigger. The consequence is the bedside pattern you expect. The rescue is the first nursing action or escalation that prevents deterioration. For ${safe}, the rescue mindset is ${cue.priority}. This turns the topic from a memorized chapter into an ICU decision pathway.`,
+    shared
+  ];
+  if(label==='Assessment lens') return [
+    `The assessment lens for ${safe} is about choosing the data that changes decisions. Start with airway, breathing, circulation, neurologic status, pain, safety, and the patient’s current trajectory. Then add focused data: ${cue.assessment}. Do not study assessment as a checklist of every possible sign. Study it as a filter: which finding proves stability, which finding suggests compensation is failing, and which finding requires immediate escalation?`,
+    `For this domain, high-yield data include ${lens.data}. The important CCRN skill is pairing numbers with the patient. A lab value, ventilator pressure, ECG change, blood pressure, or neuro score is more meaningful when it is connected to mentation, urine output, skin perfusion, oxygen requirement, pain, bleeding, agitation, or family/patient safety. Trend language matters: new, worsening, refractory, sudden, persistent, and unresponsive to treatment usually raise the priority.`,
+    `When reading a question stem, separate expected findings from rescue findings. Expected findings support the diagnosis; rescue findings change what you do next. In ${safe}, red flags may include ${lens.watch}. If the patient is deteriorating, the best answer may be reassessment, immediate intervention, notification, activation of a protocol, or preparation for a procedure. If the patient is stable, the best answer may be monitoring, teaching, prevention, or clarifying the plan.`,
+    shared
+  ];
+  if(label==='Nursing priorities') return [
+    `Nursing priorities for ${safe} should be organized by threat, timing, and scope. First, identify whether the patient needs immediate stabilization. Second, decide what nursing action can be done now while the definitive treatment is being arranged. Third, reassess the response. For this topic, the priority pattern is to ${cue.priority}. That wording matters because CCRN questions often include several actions that are technically correct, but only one action fits the patient’s current instability.`,
+    `Across the ${lens.domain} domain, priorities include: ${lens.priorities}. This can mean preparing emergency equipment, checking medication safety, trending hemodynamics, maintaining oxygenation, protecting neurologic function, preventing infection or injury, coordinating with the team, teaching the patient/family, or escalating an unsafe plan. The nurse is not passive in these questions. The nurse recognizes change, anticipates complications, communicates clearly, and protects the patient while the team works.`,
+    `Medication and procedure priorities should be studied through indications, monitoring, contraindications, and complications. For any medication tied to ${safe}, ask what physiologic effect is desired, what parameter proves it is working, what adverse effect would be dangerous, and what patient finding should make you pause. For any procedure, know what to prepare, what to monitor during it, and what complication would appear first at the bedside.`,
+    shared
+  ];
+  return [
+    `Exam traps for ${safe} usually come from choosing a familiar action without matching it to the physiology. The stem may offer a treatment that is normally reasonable but harmful in this exact context. For this subtopic, watch for answers that ignore ${cue.memory}. The exam is less interested in whether you can name every possible fact and more interested in whether you can avoid the action that worsens perfusion, ventilation, neurologic status, bleeding/clotting balance, infection risk, or patient safety.`,
+    `Common domain-level traps include ${lens.traps}. These wrong answers often sound efficient: give the routine medication, wait for the lab, call someone else before assessing, use the same intervention for every shock state, or focus on one number while the patient is crashing. When two answers both seem plausible, ask which one addresses the fastest reversible threat and which one merely collects more information without protecting the patient.`,
+    `Another trap is treating professional caring as separate from clinical judgment. Even in a technical question, the correct nursing action may involve advocacy, communication, teaching, collaboration, or escalation. For ${safe}, patient safety includes both physiology and process: medication checks, device alarms, consent, cultural needs, learning readiness, family communication, and clear documentation. CCRN answers usually reward active, accountable nursing judgment.`,
+    shared
+  ];
+}
+
+function mediaCards(sysId){
+  const items=MEDIA_LIBRARY[sysId]||[];
+  return `<h3>Pictures / video references</h3><div class="media-grid">${items.map(item=>`
+    <div class="media-card">
+      <div class="tag">${item.type}</div>
+      <a href="${item.url}" target="_blank" rel="noopener">${item.title}</a>
+      <p>${item.note}</p>
+    </div>`).join('')}</div>`;
+}
+function studyGuide(sysId, sub){
+  const g=SYSTEM_STUDY_GUIDES[sysId];
+  if(!g) return '';
+  const panel = label => {
+    const key = label==='Core concept' ? 'core' : label==='Assessment lens' ? 'assess' : label==='Nursing priorities' ? 'priorities' : 'traps';
+    const labels = label==='Core concept'
+      ? ['What it means','CCRN angle','How to study it','Bottom line']
+      : label==='Assessment lens'
+        ? ['Start with the patient','Trend the right data','Expected vs rescue findings','Bottom line']
+        : label==='Nursing priorities'
+          ? ['Threat, timing, scope','What the nurse owns','Meds and procedures','Bottom line']
+          : ['Why answers go wrong','Common traps','Caring is still tested','Bottom line'];
+    const bullets = panelParagraphs(label, sub, sysId).map((p,i)=>`<b>${labels[i]||'Study point'}:</b> ${p}`);
+    return `<details class="study-box">
+      <summary><b>${label}</b><span>${g[key]}</span></summary>
+      ${studyBullets(bullets, 'panel-list')}
+    </details>`;
+  };
+  return `<h3>Barron's-style study pass</h3>
+    <div class="study-grid">
+      ${panel('Core concept')}
+      ${panel('Assessment lens')}
+      ${panel('Nursing priorities')}
+      ${panel('Exam traps')}
+    </div>
+    <div class="key"><b>Use with the book:</b> Read the ${escHtml(sub)} section, then write one sentence for pathophysiology, one for recognition, one for the first nursing action, and one for the complication that would kill the patient fastest.</div>`;
+}
+function notesBox(sub){
+  const p=progress[sub]||{};
+  return `<h3>My study notes</h3>
+    <div class="notes-box">
+      <textarea placeholder="Write your Barron's notes, weak points, memory hooks, or page references for ${escHtml(sub)}..." oninput="saveTopicNote('${jsArg(sub)}', this.value)">${escHtml(p.notes||'')}</textarea>
+      <div class="save-line"><span>Saved on this device as you type.</span><span id="noteStatus">Ready</span></div>
+    </div>`;
+}
+function openReader(sub){
+  const sysId=SUB_TO_SYS[sub];
+  const sys=PLAN.find(s=>s.id===sysId);
+  document.getElementById('rdTitle').textContent=sub;
+  document.getElementById('rdPill').innerHTML=
+    `<span class="pill ${sys.kind==='caring'?'plump':'tealp'}">${sys.name.split(' / ')[0]} &middot; ${sys.pct}%</span>`+
+    (CONTENT[sub]&&CONTENT[sub].hy?' <span class="pill hy">&#9733; High-yield</span>':'');
+  let body='';
+  if(CONTENT[sub]){
+    body=CONTENT[sub].html + deepDiveHtml(sub, sysId, true);
+  } else {
+    body=deepDiveHtml(sub, sysId, false);
+  }
+  body += studyGuide(sysId, sub) + mediaCards(sysId);
+  // progress checkboxes
+  const p=progress[sub]||{chk:{}};
+  const checkrow=`<div class="checkrow">${CHK_LABELS.map((l,i)=>`
+    <label class="chk ${p.chk&&p.chk[i]?'on':''}">
+      <input type="checkbox" ${p.chk&&p.chk[i]?'checked':''} onchange="toggleChk('${jsArg(sub)}',${i},this)"> ${l}
+    </label>`).join('')}</div>`;
+  document.getElementById('rdContent').innerHTML=body+notesBox(sub)+
+    `<h3 style="margin-top:24px">Track this topic</h3>`+checkrow+
+    `<div style="margin-top:16px"><button class="nextbtn" onclick="quizThisSystem('${sysId}')">Quiz me on ${sys.name.split(' / ')[0]} &rarr;</button></div>`;
+  showView('reader');
+}
+function saveTopicNote(sub, value){
+  if(!progress[sub]) progress[sub]={chk:{}};
+  progress[sub].notes=value;
+  saveProgress();
+  const status=document.getElementById('noteStatus');
+  if(status){
+    status.textContent='Saved';
+    clearTimeout(status._t);
+    status._t=setTimeout(()=>status.textContent='Ready',1200);
+  }
+  renderLibrary();
+}
+function toggleChk(sub,i,el){
+  if(!progress[sub]) progress[sub]={chk:{}};
+  if(!progress[sub].chk) progress[sub].chk={};
+  progress[sub].chk[i]=el.checked;
+  el.closest('.chk').classList.toggle('on',el.checked);
+  saveProgress();
+  renderLibrary();
+}
+function quizThisSystem(sysId){
+  selectedSys=new Set([sysId]);
+  showView('quiz');
+  renderQuizChips();
+  startQuiz();
+}
+
+/* =====================================================================
+   QUIZ ENGINE
+   ===================================================================== */
+let selectedSys=new Set(PLAN.map(s=>s.id));
+let quizLen=10, quiz=[], qIdx=0, qCorrect=0, qBySys={}, answered=false, quizMode='quiz';
+
+function renderQuizChips(){
+  document.getElementById('quizSysChips').innerHTML=
+    `<span class="muted" style="font-size:13px;font-weight:600;margin-right:4px">Systems:</span>`+
+    PLAN.map(s=>`<button class="chip sys ${selectedSys.has(s.id)?'on':''}" data-sys="${s.id}">${s.name.split(' / ')[0]}</button>`).join('');
+  updateBankNote();
+}
+function updateBankNote(){
+  const avail=QBANK.filter(q=>selectedSys.has(q.sys)).length;
+  document.getElementById('qBankNote').textContent=`${avail} quiz questions available for your current selection. Practice Exam 1 and Practice Exam 2 each have 150 separate questions with no repeated stems from this quiz bank.`;
+}
+document.getElementById('quizSysChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip.sys'); if(!b)return;
+  const id=b.dataset.sys;
+  if(selectedSys.has(id)) selectedSys.delete(id); else selectedSys.add(id);
+  if(selectedSys.size===0) selectedSys.add(id); // keep at least one
+  b.classList.toggle('on',selectedSys.has(id));
+  updateBankNote();
+});
+document.querySelectorAll('.chip.len').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip.len').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); quizLen=parseInt(b.dataset.len);
+}));
+document.getElementById('startQuiz').addEventListener('click',startQuiz);
+document.querySelectorAll('[data-exam]').forEach(b=>b.addEventListener('click',()=>startExam(b.dataset.exam)));
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startQuiz(){
+  quizMode='quiz';
+  let pool=QBANK.filter(q=>selectedSys.has(q.sys));
+  if(pool.length===0){alert('No questions in the bank for that selection yet.');return;}
+  pool=shuffle([...pool]);
+  quiz = quizLen===0?pool:pool.slice(0,Math.min(quizLen,pool.length));
+  qIdx=0;qCorrect=0;qBySys={};answered=false;
+  document.getElementById('quizSetup').style.display='none';
+  document.getElementById('quizResults').style.display='none';
+  document.getElementById('quizRunner').style.display='block';
+  renderQuestion();
+}
+function startExam(examId){
+  quizMode=examId;
+  const pool=PRACTICE_EXAMS[examId]||[];
+  if(pool.length===0){alert('That practice exam is not available yet.');return;}
+  quiz=[...pool];
+  qIdx=0;qCorrect=0;qBySys={};answered=false;
+  document.getElementById('quizSetup').style.display='none';
+  document.getElementById('quizResults').style.display='none';
+  document.getElementById('quizRunner').style.display='block';
+  renderQuestion();
+}
+function renderQuestion(){
+  answered=false;
+  const q=quiz[qIdx];
+  const sysName=PLAN.find(s=>s.id===q.sys).name.split(' / ')[0];
+  document.getElementById('qFill').style.width=((qIdx)/quiz.length*100)+'%';
+  const modeLabel=quizMode==='quiz'?'Q':(quizMode==='exam1'?'Exam 1':'Exam 2');
+  document.getElementById('qCount').textContent=`${modeLabel} ${qIdx+1} of ${quiz.length}`;
+  document.getElementById('qSys').innerHTML=sysName+' &middot; '+q.topic;
+  document.getElementById('qStem').innerHTML=q.q;
+  const letters=['A','B','C','D'];
+  document.getElementById('qOpts').innerHTML=q.o.map((opt,i)=>
+    `<button class="opt" data-i="${i}"><span class="ltr">${letters[i]}</span>${opt}</button>`).join('');
+  document.querySelectorAll('#qOpts .opt').forEach(b=>b.addEventListener('click',()=>answer(parseInt(b.dataset.i))));
+  document.getElementById('qRationale').className='rationale';
+  document.getElementById('qNext').style.display='none';
+}
+function answer(i){
+  if(answered)return; answered=true;
+  const q=quiz[qIdx];
+  const correct=q.a;
+  const opts=document.querySelectorAll('#qOpts .opt');
+  opts.forEach(o=>o.disabled=true);
+  opts[correct].classList.add('correct');
+  const ok=(i===correct);
+  if(ok){qCorrect++;} else {opts[i].classList.add('wrong'); weak[q.topic]=(weak[q.topic]||0)+1;}
+  qBySys[q.sys]=qBySys[q.sys]||{c:0,t:0}; qBySys[q.sys].t++; if(ok)qBySys[q.sys].c++;
+  saveProgress();
+  const rat=document.getElementById('qRationale');
+  rat.innerHTML=`<div class="verdict ${ok?'ok':'no'}">${ok?'&#10003; Correct':'&#10007; Not quite'}</div>${q.r}`;
+  rat.classList.add('show');
+  document.getElementById('qNext').style.display='inline-block';
+  document.getElementById('qNext').textContent = qIdx+1<quiz.length?'Next \u2192':'See results';
+}
+document.getElementById('qNext').addEventListener('click',()=>{
+  if(qIdx+1<quiz.length){qIdx++;renderQuestion();}
+  else showResults();
+});
+function showResults(){
+  document.getElementById('quizRunner').style.display='none';
+  document.getElementById('quizResults').style.display='block';
+  const pct=Math.round(qCorrect/quiz.length*100);
+  const el=document.getElementById('rsScore');
+  el.textContent=pct+'%';
+  el.className='score '+(pct>=80?'pass':pct>=65?'near':'low');
+  document.getElementById('rsSub').innerHTML=`${qCorrect} of ${quiz.length} correct &middot; `+
+    (pct>=80?'Passing range &mdash; keep this up.':pct>=65?'Close. Drill the misses below.':'Early days &mdash; the misses are your study list.')+
+    (quizMode==='quiz'?'':`<br><span class="dim">${quizMode==='exam1'?'Practice Exam 1':'Practice Exam 2'} used a dedicated 150-question bank.</span>`);
+  document.getElementById('rsBreak').innerHTML=Object.keys(qBySys).map(sid=>{
+    const s=PLAN.find(x=>x.id===sid), d=qBySys[sid];
+    return `<div class="brk"><span>${s.name.split(' / ')[0]}</span><b>${d.c}/${d.t}</b></div>`;
+  }).join('');
+}
+function resetQuiz(){
+  quizMode='quiz';
+  document.getElementById('quizResults').style.display='none';
+  document.getElementById('quizSetup').style.display='block';
+  renderQuizChips();
+}
+
+/* =====================================================================
+   VISUALS + REFERENCES
+   ===================================================================== */
+function renderVisualLibrary(){
+  const systemSections=PLAN.map(sys=>`
+    <div>
+      <h3 class="section-title" style="margin-top:0">${sys.name}</h3>
+      ${mediaCards(sys.id)}
+    </div>`).join('');
+  const refs=`<h3 class="section-title">Core references</h3><div class="ref-list">${CORE_REFERENCES.map(r=>`
+    <div class="ref-item">
+      <b>${r.group}</b>
+      <div><a href="${r.url}" target="_blank" rel="noopener">${r.title}</a><p>${r.note}</p></div>
+    </div>`).join('')}</div>`;
+  document.getElementById('visualLibrary').innerHTML=systemSections+refs;
+}
+
+/* =====================================================================
+   PROGRESS
+   ===================================================================== */
+function renderProgress(){
+  const allSubs=PLAN.flatMap(s=>s.subs);
+  const started=allSubs.filter(s=>subState(s)!=='').length;
+  const done=allSubs.filter(s=>subState(s)==='done').length;
+  const noted=allSubs.filter(s=>progress[s]&&progress[s].notes&&progress[s].notes.trim()).length;
+  const withContent=allSubs.length;
+  document.getElementById('progKpis').innerHTML=`
+    <div class="kpi"><div class="n" style="color:var(--teal)">${done}</div><div class="l">Topics completed</div></div>
+    <div class="kpi"><div class="n" style="color:var(--amber)">${started}</div><div class="l">Topics started</div></div>
+    <div class="kpi"><div class="n">${allSubs.length}</div><div class="l">Total subtopics</div></div>
+    <div class="kpi"><div class="n" style="color:var(--good)">${withContent}</div><div class="l">Deep-dives written</div></div>
+    <div class="kpi"><div class="n" style="color:var(--plum)">${noted}</div><div class="l">Topics with notes</div></div>`;
+  document.getElementById('progBars').innerHTML=PLAN.map(s=>{
+    const d=s.subs.filter(x=>subState(x)==='done').length;
+    const pct=Math.round(d/s.subs.length*100);
+    return `<div class="bar-row" style="grid-template-columns:210px 1fr 70px">
+      <div class="bar-name">${s.name.split(' / ')[0]}<small>${d}/${s.subs.length} complete</small></div>
+      <div class="bar-track"><div class="bar-fill ${s.kind==='caring'?'pc':''}" style="width:${pct}%"></div></div>
+      <div class="bar-meta"><b>${pct}%</b></div></div>`;
+  }).join('');
+  const weakEntries=Object.entries(weak).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('weakList').innerHTML= weakEntries.length===0
+    ? '<p class="muted" style="margin:0">Miss a quiz question and the topic shows up here.</p>'
+    : `<div class="checkrow" style="margin:0">${weakEntries.map(([t,c])=>
+        `<span class="chk on" style="color:var(--coral);border-color:var(--coral)">${t} &middot; missed ${c}&times;</span>`).join('')}</div>`;
+}
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+renderBlueprint();
+renderLibrary();
+renderQuizChips();
+renderVisualLibrary();
+initCloudSync();
+
+</script>
+</body>
+</html>
