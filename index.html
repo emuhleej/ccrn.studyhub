@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adult CCRN Study Hub</title>
 <script src="firebase-config.js"></script>
+<script src="study-state.js"></script>
+<script src="clinical-gate.js"></script>
+<script src="clinical-review.js"></script>
 <style>
   :root{
     --bg:#f7faf8;
@@ -30,6 +33,12 @@
     font-synthesis:none;
   }
   *{box-sizing:border-box}
+  button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible,[tabindex="-1"]:focus-visible{outline:3px solid var(--teal-deep);outline-offset:3px}
+  button{min-height:44px}
+  button:disabled{cursor:not-allowed;opacity:.65}
+  .review-notice{border:1px solid var(--line-strong);border-left:4px solid var(--amber);border-radius:10px;background:#fff;padding:12px 14px;margin:0 0 14px;font-size:13px;overflow-wrap:anywhere}
+  .content,.card,.bar-row>*{min-width:0;overflow-wrap:anywhere}
+  .content table{display:block;max-width:100%;overflow-x:auto}
   html,body{margin:0;padding:0}
   body{
     background:radial-gradient(circle at top left,#e5f3f1,transparent 34rem),var(--bg);
@@ -117,7 +126,7 @@
   .bar-meta small{color:var(--ink-dim)}
 
   /* ---------- library ---------- */
-  .sys-head{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+  .sys-head{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left}
   .sys-head .chev{color:var(--ink-dim);transition:.2s;font-size:13px}
   .sys-head.open .chev{transform:rotate(90deg)}
   .sys-title{font-size:17px;font-weight:700}
@@ -220,7 +229,7 @@
   .quick-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
   .quick-card b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
   .quick-card span{display:block;color:var(--ink-dim);font-size:12px;line-height:1.35}
-  .media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:12px 0 16px}
+  .media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px;margin:12px 0 16px}
   .media-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
   .media-card .tag{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);font-weight:800}
   .media-card a{display:block;margin-top:4px;font-weight:700;text-decoration:none;color:var(--ink)}
@@ -256,7 +265,7 @@
   .notes-box textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(37,132,124,.14)}
   .notes-box .save-line{display:flex;justify-content:space-between;gap:10px;align-items:center;
     color:var(--ink-dim);font-size:12.5px;margin-top:7px}
-  .exam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:14px}
+  .exam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px;margin-top:14px}
   .exam-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
   .exam-card b{display:block;margin-bottom:4px}
   .exam-card p{margin:0;color:var(--ink-dim);font-size:12.5px}
@@ -276,9 +285,19 @@
     .hero-main h2{font-size:22px}
     .ref-item{grid-template-columns:1fr}
     .bar-row{grid-template-columns:1fr;gap:6px}
+    .bar-row.progress-row{grid-template-columns:1fr}
+    .sys-head{flex-wrap:wrap;gap:6px}
+    .sys-pct{margin-left:18px}
+    .reader-head{flex-wrap:wrap}
+    .wrap{padding:16px 12px 50px}
+    .card{padding:16px}
+    .study-grid{grid-template-columns:1fr}
+    .tabs{position:static}
     .bar-meta{text-align:left}
     .brand h1{font-size:24px}
   }
+  @media(prefers-reduced-motion:reduce){.view.active,.rationale.show{animation:none}*{scroll-behavior:auto!important}}
+  .progress-row{grid-template-columns:210px minmax(0,1fr) 70px}
 </style>
 </head>
 <body>
@@ -291,13 +310,13 @@
       <div class="sub">Built on the current AACN test plan &mdash; exams on/after Nov 12, 2025</div>
     </div>
     <div class="plan-note">
-      Topic weightings and subtopics pulled from the official AACN Adult CCRN Exam Handbook and cross-referenced with your Notion library.
+      Domain weights checked against the July 2026 AACN handbook. Study content still requires licensed clinical review.
       <br><b id="syncStatus">Saved on this device</b>
     </div>
   </div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-view="blueprint">Study Blueprint</button>
+  <div class="tabs" id="tabs" role="navigation" aria-label="Study sections">
+    <button class="tab active" data-view="blueprint" aria-current="page">Study Blueprint</button>
     <button class="tab" data-view="library">Topic Library</button>
     <button class="tab" data-view="visuals">Visuals & References</button>
     <button class="tab" data-view="quiz">Quiz</button>
@@ -309,7 +328,7 @@
     <div class="hero">
       <div class="card hero-main">
         <span class="pill hy">Barron's-style study build</span>
-        <h2>Turn the 300-page review book into daily ICU-ready study blocks.</h2>
+        <h2>Organize your critical-care study into daily learning blocks.</h2>
         <p>This version adds system summaries, bedside decision traps, visual/video prompts, source references, and a deeper study template for every subtopic so the library feels more like a full review course than a checklist.</p>
         <div class="quick-map">
           <div class="quick-card"><b>Read</b><span>Patho, assessment, diagnostics, nursing priorities, and exam traps.</span></div>
@@ -355,6 +374,7 @@
 
   <!-- ================= LIBRARY ================= -->
   <div class="view" id="view-library">
+    <div class="review-notice" id="libraryReviewNotice">Library summaries and generated study prompts are not clinically validated. They have not received the question-by-question source review. Known conflicting sections are withheld; verify other claims against current guidance and a qualified educator.</div>
     <div id="libraryList" class="grid" style="gap:12px"></div>
   </div>
 
@@ -384,6 +404,7 @@
     <div class="card" id="quizSetup">
       <h2 style="font-size:19px;margin-bottom:4px">Practice quiz</h2>
       <p class="muted" style="margin:0 0 14px;font-size:14px">CCRN-format scenario questions with rationales. Pick your systems and length.</p>
+      <div class="review-notice" id="clinicalNotice">Source-checked learning questions only. AI-assisted source comparison is not licensed clinical review or exam validation. Unsupported items are withheld. <a href="docs/clinical-question-audit.md" target="_blank" rel="noopener">Item evidence and limitations</a>.</div>
       <div class="quiz-setup">
         <div class="row" id="quizSysChips"></div>
         <div class="row" style="margin-top:14px">
@@ -393,7 +414,7 @@
           <button class="chip len" data-len="50">50</button>
           <button class="chip len" data-len="0">All available</button>
         </div>
-        <button class="startbtn" id="startQuiz">Start quiz</button>
+        <button class="startbtn" id="startQuiz" disabled>Start quiz</button>
         <p class="dim" style="font-size:12.5px;margin:12px 0 0" id="qBankNote"></p>
       </div>
       <div class="section-title" style="margin-top:24px">Practice exams</div>
@@ -401,12 +422,12 @@
         <div class="exam-card">
           <b>Practice Exam 1</b>
           <p>Practice exam pending clinically reviewed questions.</p>
-          <button class="startbtn" data-exam="exam1">Start Exam 1</button>
+          <button class="startbtn" data-exam="exam1" disabled>Start Exam 1</button>
         </div>
         <div class="exam-card">
           <b>Practice Exam 2</b>
           <p>Practice exam pending clinically reviewed questions.</p>
-          <button class="startbtn" data-exam="exam2">Start Exam 2</button>
+          <button class="startbtn" data-exam="exam2" disabled>Start Exam 2</button>
         </div>
       </div>
     </div>
@@ -417,15 +438,15 @@
         <div class="lbl" id="qCount"></div>
       </div>
       <div class="q-sys" id="qSys"></div>
-      <div class="q-stem" id="qStem"></div>
+      <div class="q-stem" id="qStem" tabindex="-1"></div>
       <div id="qOpts"></div>
-      <div class="rationale" id="qRationale"></div>
+      <div class="rationale" id="qRationale" aria-live="polite" tabindex="-1"></div>
       <div style="text-align:right"><button class="nextbtn" id="qNext" style="display:none">Next &rarr;</button></div>
     </div>
 
     <div class="card" id="quizResults" style="display:none">
       <div class="results">
-        <div class="score" id="rsScore"></div>
+        <div class="score" id="rsScore" tabindex="-1" aria-label="Practice score"></div>
         <div class="sub" id="rsSub"></div>
         <div class="breakdown" id="rsBreak"></div>
         <button class="startbtn" style="margin-top:22px" onclick="resetQuiz()">New quiz</button>
@@ -1088,92 +1109,40 @@ o:["Continue the current practice since it's the unit norm","Question the practi
 r:"Clinical Inquiry is the competency of questioning practice and using <b>evidence/EBP</b> to improve care &mdash; raising the concern and pursuing evidence-based change reflects it."}
 ];
 
-const QUESTION_TARGET = 100; // Legacy template definitions retained for migration only; not used to generate scored exams.
-const QUESTION_STYLES = {
-  cv:[
-    {stem:'A patient is being evaluated for {topic}. Which nursing focus is most important first?', answer:'Assess perfusion, rhythm, blood pressure trend, and signs of ischemia before choosing the intervention.', distract:['Encourage oral fluids and reassess at the end of the shift.','Delay action until the next scheduled cardiac enzyme result.','Place the patient flat and reduce monitoring to promote rest.'], rationale:'Cardiovascular questions usually hinge on perfusion and stability. Rhythm, MAP, ischemic symptoms, urine output, mentation, and hemodynamic trends tell you whether this is a watch, treat, or call-now problem.'},
-    {stem:'During care for {topic}, which finding would require the fastest escalation?', answer:'New hypotension with altered mentation, cool skin, or falling urine output.', distract:['A family member asks for a routine update.','Mild anxiety that improves with explanation.','A stable blood pressure with unchanged telemetry.'], rationale:'New signs of poor perfusion are high-risk in cardiovascular patients and often precede arrest or shock progression.'},
-    {stem:'Which order should be questioned in a patient whose presentation suggests {topic}?', answer:'A medication or action that could worsen preload, afterload, rhythm stability, or coronary perfusion without reassessment.', distract:['Continuous monitoring while symptoms are active.','Rapid escalation for unstable vital signs.','Focused reassessment after each intervention.'], rationale:'The exam often tests whether the nurse recognizes an intervention that makes the underlying hemodynamic problem worse.'}
-  ],
-  resp:[
-    {stem:'A patient with {topic} suddenly deteriorates. What should the nurse prioritize?', answer:'Assess airway, breathing, oxygenation, ventilation, and equipment/tube problems immediately.', distract:['Wait for the next scheduled chest x-ray before acting.','Decrease monitoring to reduce stimulation.','Offer oral fluids and reassess in 60 minutes.'], rationale:'Respiratory deterioration is an airway/breathing problem until proven otherwise. The nurse should rapidly assess patient, tube, lung, and equipment causes.'},
-    {stem:'Which assessment trend is most concerning during management of {topic}?', answer:'Increasing work of breathing with worsening gas exchange or mental status.', distract:['A stable respiratory rate with improving comfort.','A pulse oximetry value that improves after appropriate oxygen titration.','A cough that clears after suctioning.'], rationale:'Rising work of breathing, CO2 retention, or altered mentation can signal fatigue and impending respiratory failure.'},
-    {stem:'Which intervention best matches CCRN priorities for {topic}?', answer:'Match support to the mechanism: oxygenation, ventilation, airway obstruction, compliance, or dead-space mismatch.', distract:['Use the same oxygen and ventilator strategy for every respiratory disorder.','Avoid reassessing after ventilator changes.','Focus only on SpO2 and ignore the ABG and patient appearance.'], rationale:'Respiratory questions reward matching the therapy to the physiologic problem rather than treating every low saturation the same way.'}
-  ],
-  ehgri:[
-    {stem:'A patient is being treated for {topic}. Which action best reflects safe sequencing?', answer:'Verify the critical labs and correct the immediate life threat in the correct order.', distract:['Treat the number without assessing symptoms or trends.','Give the fastest medication available without checking contraindications.','Delay all interventions until every diagnostic result returns.'], rationale:'This domain often tests order-of-operations: potassium before insulin when low, calcium first for dangerous hyperkalemia, stop transfusion reactions immediately, and treat the precipitating cause.'},
-    {stem:'Which finding would most change the plan for {topic}?', answer:'A new life-threatening lab pattern paired with symptoms, ECG changes, bleeding, thrombosis, or organ dysfunction.', distract:['A single mildly abnormal value with no clinical change.','A resolved symptom from the prior shift.','A family question about visiting hours.'], rationale:'The CCRN exam pairs labs with clinical consequences. The dangerous answer is the lab pattern that is already affecting perfusion, clotting, kidney function, or neurologic status.'},
-    {stem:'Which response should the nurse avoid when caring for {topic}?', answer:'Using a routine intervention that worsens the underlying metabolic, renal, bleeding, or clotting problem.', distract:['Rechecking the patient after treatment.','Communicating a critical value promptly.','Reviewing medications for renal or bleeding risk.'], rationale:'Many wrong answers are routine actions in the wrong context, such as insulin before potassium safety or platelets in suspected HIT.'}
-  ],
-  mnb:[
-    {stem:'A patient is admitted with {topic}. What is the best first nursing focus?', answer:'Protect neurologic function by preventing hypoxia, hypotension, injury, and delayed recognition of deterioration.', distract:['Cluster all neurologic checks at the end of the shift.','Offer sedatives before assessing the neurologic baseline.','Allow oral intake before safety screening when stroke is possible.'], rationale:'Neuro questions center on preventing secondary injury and trending subtle changes before they become late signs.'},
-    {stem:'Which change is most concerning in a patient with {topic}?', answer:'A new change in level of consciousness, pupils, motor response, seizure activity, or safety risk.', distract:['A stable exam that matches the prior documented baseline.','A mild headache relieved with ordered therapy and no neuro change.','Family anxiety without patient deterioration.'], rationale:'A neurologic change from baseline is often the earliest high-yield warning sign and requires prompt reassessment/escalation.'},
-    {stem:'Which action best supports safe care for {topic}?', answer:'Use focused neurologic assessment, safety precautions, and early escalation for signs of secondary injury.', distract:['Wait for severe late signs before notifying the team.','Ignore psychosocial drivers of agitation or non-adherence.','Treat every patient with the same sedation approach.'], rationale:'The best answer combines neurologic protection with patient-specific safety and communication.'}
-  ],
-  multi:[
-    {stem:'A patient with {topic} is worsening. Which priority best fits multisystem CCRN care?', answer:'Identify the failing system, support perfusion/oxygen delivery, and reassess response to treatment.', distract:['Focus on one lab value and ignore perfusion.','Delay treatment until the full diagnosis is certain.','Avoid escalation until the patient arrests.'], rationale:'Multisystem questions test recognition of shock, sepsis, acid-base, electrolyte, toxin, burn, or end-of-life patterns and reassessment after intervention.'},
-    {stem:'Which trend is most urgent in {topic}?', answer:'Worsening mentation, MAP, lactate, urine output, temperature instability, or organ dysfunction.', distract:['A stable vital sign trend with improving symptoms.','A completed family teaching form.','A noncritical lab that is unchanged from baseline.'], rationale:'Perfusion and organ dysfunction trends are more important than isolated data points.'},
-    {stem:'What is the best way to avoid a common CCRN trap in {topic}?', answer:'Treat the reversible killer first while considering the specific cause, not just the category label.', distract:['Use the same fluid and pressor strategy for every shock state.','Correct sodium, glucose, and osmolality as rapidly as possible.','Ignore goals of care until all invasive options are exhausted.'], rationale:'Multisystem traps include one-size-fits-all shock treatment, unsafe rapid correction, and missing the patient’s goals.'}
-  ],
-  pc:[
-    {stem:'A situation involving {topic} creates tension between the plan of care and patient needs. What response is best?', answer:'Clarify the patient’s values and safety needs, communicate with the team, and escalate unresolved concerns appropriately.', distract:['Carry out the plan without question to avoid conflict.','Exclude the patient or family from the discussion.','Document the concern but avoid speaking with anyone.'], rationale:'Professional Caring questions reward advocacy, collaboration, respectful communication, and patient-centered safety.'},
-    {stem:'Which action best reflects the Synergy Model when addressing {topic}?', answer:'Match nursing competencies and resources to the patient and family’s current needs.', distract:['Use the same communication style for every patient.','Assume culture and preferences are unrelated to care.','Wait for another discipline to identify safety concerns.'], rationale:'The Synergy Model asks the nurse to respond to patient characteristics with the right competency, communication, and resources.'},
-    {stem:'Which answer is least consistent with Professional Caring for {topic}?', answer:'Ignoring patient voice, diversity, evidence, or safety to preserve convenience.', distract:['Using evidence to question practice.','Collaborating with the interprofessional team.','Teaching in a way the learner can understand.'], rationale:'Professional Caring is active, not passive. The nurse protects patient voice, safety, learning, and ethical practice.'}
-  ]
-};
-
-function makeGeneratedQuestions(bankLabel, target, used){
-  const out=[];
-  let serial=1;
-  while(out.length<target && serial<3000){
-    const sys=PLAN[(serial-1)%PLAN.length];
-    const subs=sys.subs;
-    const topic=subs[Math.floor((serial-1)/PLAN.length)%subs.length];
-    const styles=QUESTION_STYLES[sys.id]||QUESTION_STYLES.multi;
-    const style=styles[(serial-1)%styles.length];
-    const stem=`${bankLabel} ${serial}: ${style.stem.replace('{topic}', topic)}`;
-    if(!used.has(stem)){
-      const correctSlot=(serial + bankLabel.length)%4;
-      const options=[];
-      style.distract.forEach(x=>options.push(x));
-      options.splice(correctSlot,0,style.answer);
-      out.push({
-        sys:sys.id,
-        topic,
-        q:stem,
-        o:options,
-        a:correctSlot,
-        r:`${style.rationale} <b>Topic:</b> ${topic}.`
-      });
-      used.add(stem);
-    }
-    serial++;
-  }
-  return out;
-}
-
-const usedQuestionStems = new Set(QBANK.map(q=>q.q));
-const PRACTICE_EXAMS = { exam1: [], exam2: [] }; // Awaiting clinically reviewed banks.
+// Scored exams remain unavailable until a separately reviewed bank exists.
+const PRACTICE_EXAMS = { exam1: [], exam2: [] };
 
 /* =====================================================================
    STATE + PERSISTENCE  (localStorage where available; degrades to memory)
    ===================================================================== */
 const store = (()=>{
-  let mem={};
-  const ok=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
+  const mem=Object.create(null);
+  let persistent=true;
   return {
-    get(k,d){try{if(ok){const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}}catch(e){}return k in mem?mem[k]:d;},
-    set(k,v){try{if(ok){localStorage.setItem(k,JSON.stringify(v));return}}catch(e){}mem[k]=v;}
+    get persistent(){return persistent;},
+    get(k,d){if(Object.hasOwn(mem,k))return mem[k];try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){if(e.name!=='SyntaxError')persistent=false;return d;}},
+    set(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){persistent=false;return false;}}
   };
 })();
-let progress = store.get('ccrn_progress', {}); // {subtopic: {chk:{}, }}
-let weak = store.get('ccrn_weak', {});
-let attempts = store.get('ccrn_attempts', []);          // {topic: count}
-let cloudSync = { ready:false, docRef:null, setDoc:null, onSnapshot:null, serverTimestamp:null, saveTimer:null, applying:false };
+const allTopicNames=PLAN.flatMap(s=>s.subs);
+let progress = CCRN_STATE.normalizeProgress(store.get('ccrn_progress', {}),allTopicNames);
+let weak = CCRN_STATE.normalizeWeak(store.get('ccrn_weak', {}));
+let attempts = CCRN_STATE.normalizeAttempts(store.get('ccrn_attempts', []));
+let localRevision=0;
+function captureStudyState(){return {progress:CCRN_STATE.normalizeProgress(progress,allTopicNames),weak:CCRN_STATE.normalizeWeak(weak),attempts:CCRN_STATE.normalizeAttempts(attempts)};}
+const storedPendingSync=store.get('ccrn_pending_sync',null);
+const invalidPendingSync=storedPendingSync!==null && (storedPendingSync.version!==1 || !CCRN_STATE.validCloudState(storedPendingSync.baseline));
+let pendingSync=invalidPendingSync?null:storedPendingSync;
+let cloudSync = { ready:false, docRef:null, setDoc:null, onSnapshot:null, serverTimestamp:null, saveTimer:null, applying:false, acknowledgedRevision:pendingSync?-1:0, baseline:pendingSync?.baseline||captureStudyState() };
+function rememberPendingSync(){pendingSync={version:1,baseline:cloudSync.baseline};store.set('ccrn_pending_sync',pendingSync);}
+function localSaveText(){return store.persistent?'Saved on this device':'Storage unavailable — saved only for this session';}
 function saveProgress(){
+  localRevision++;
   store.set('ccrn_progress',progress);
   store.set('ccrn_weak',weak);
   store.set('ccrn_attempts',attempts);
+  if(hasCloudConfig())rememberPendingSync();
+  if(!cloudSync.ready)setSyncText(localSaveText());
   scheduleCloudSave();
 }
 function hasCloudConfig(){
@@ -1187,27 +1156,61 @@ function setSyncText(msg){
 function scheduleCloudSave(){
   if(!cloudSync.ready || cloudSync.applying) return;
   clearTimeout(cloudSync.saveTimer);
-  cloudSync.saveTimer=setTimeout(saveCloudState,450);
+  setSyncText('Saving changes...');
+  cloudSync.saveTimer=setTimeout(()=>{cloudSync.saveTimer=null;saveCloudState();},450);
 }
 async function saveCloudState(){
   if(!cloudSync.ready) return;
+  if(cloudSync.saving){cloudSync.saveQueued=true;return;}
+  const savingRevision=localRevision;
+  const payload=captureStudyState();
+  cloudSync.saveQueued=false;
+  cloudSync.saving=true;
   try{
     await cloudSync.setDoc(cloudSync.docRef,{
-      progress,
-      weak,
-      attempts,
+      ...payload,
       updatedAt:cloudSync.serverTimestamp()
     },{merge:true});
-    setSyncText('Synced');
+    cloudSync.acknowledgedRevision=savingRevision;
+    cloudSync.baseline=payload;
+    if(savingRevision===localRevision){pendingSync=null;store.set('ccrn_pending_sync',null);}
+    else rememberPendingSync();
+    if(cloudSync.ready)setSyncText(savingRevision===localRevision?'Synced':'Saving changes...');
   }catch(e){
-    setSyncText('Saved on this device');
+    setSyncText(localSaveText()+' — cloud save failed');
+  }finally{
+    cloudSync.saving=false;
+    if(cloudSync.ready && (cloudSync.saveQueued || savingRevision!==localRevision)){
+      clearTimeout(cloudSync.saveTimer);cloudSync.saveTimer=null;
+      await saveCloudState();
+    }
   }
 }
+function applyCloudState(data){
+  if(!CCRN_STATE.validCloudState(data))throw Error('Invalid cloud study state');
+  cloudSync.applying=true;
+  try{
+    if(Object.hasOwn(data,'progress'))progress=CCRN_STATE.normalizeProgress(data.progress,allTopicNames);
+    if(Object.hasOwn(data,'weak'))weak=CCRN_STATE.normalizeWeak(data.weak);
+    if(Object.hasOwn(data,'attempts'))attempts=CCRN_STATE.normalizeAttempts(data.attempts);
+    store.set('ccrn_progress',progress);
+    store.set('ccrn_weak',weak);
+    store.set('ccrn_attempts',attempts);
+    renderLibrary();
+    if(document.getElementById('view-progress').classList.contains('active'))renderProgress();
+    // Refresh the active reader only when the user is not editing its notes.
+    if(document.getElementById('view-reader').classList.contains('active') && document.activeElement?.tagName!=='TEXTAREA')openReader(document.getElementById('rdTitle').textContent);
+  }finally{cloudSync.applying=false;}
+}
 async function initCloudSync(){
+  const connectingRevision=localRevision;
+  const hadPendingSync=Boolean(pendingSync);
+  const connectingState=cloudSync.baseline;
   if(!hasCloudConfig()){
-    setSyncText('Saved on this device');
+    setSyncText(localSaveText());
     return;
   }
+  if(invalidPendingSync){setSyncText(localSaveText()+' — invalid pending-sync record; cloud paused');return;}
   try{
     setSyncText('Connecting...');
     const appMod=await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
@@ -1218,41 +1221,36 @@ async function initCloudSync(){
     await authMod.signInAnonymously(auth);
     const db=fireMod.getFirestore(app);
     const path=['users',auth.currentUser.uid,'study','adult-ccrn-hub'];
-    cloudSync={...cloudSync,ready:true,docRef:fireMod.doc(db,...path),setDoc:fireMod.setDoc,onSnapshot:fireMod.onSnapshot,serverTimestamp:fireMod.serverTimestamp};
+    cloudSync={...cloudSync,ready:false,docRef:fireMod.doc(db,...path),setDoc:fireMod.setDoc,onSnapshot:fireMod.onSnapshot,serverTimestamp:fireMod.serverTimestamp};
     const snap=await fireMod.getDoc(cloudSync.docRef);
+    const needsUpload=hadPendingSync || connectingRevision!==localRevision || !snap.exists();
     if(snap.exists()){
-      const data=snap.data()||{};
-      cloudSync.applying=true;
-      progress=data.progress||progress||{};
-      weak=data.weak||weak||{};
-      attempts=Array.isArray(data.attempts)?data.attempts:attempts;
-      store.set('ccrn_progress',progress);
-      store.set('ccrn_weak',weak);
-      store.set('ccrn_attempts',attempts);
-      cloudSync.applying=false;
-      renderLibrary();
-      renderQuizChips();
-    } else {
-      await saveCloudState();
-    }
-    cloudSync.onSnapshot(cloudSync.docRef,snap=>{
-      if(!snap.exists()) return;
-      const data=snap.data()||{};
-      cloudSync.applying=true;
-      progress=data.progress||{};
-      weak=data.weak||{};
-      attempts=Array.isArray(data.attempts)?data.attempts:attempts;
-      store.set('ccrn_progress',progress);
-      store.set('ccrn_weak',weak);
-      store.set('ccrn_attempts',attempts);
-      cloudSync.applying=false;
-      renderLibrary();
-      if(document.getElementById('view-progress').classList.contains('active')) renderProgress();
-      setSyncText('Synced');
+      const remote=snap.data();
+      applyCloudState(needsUpload?CCRN_STATE.mergeConnectingState(remote,connectingState,{progress,weak,attempts},allTopicNames):remote);
+      if(needsUpload)cloudSync.baseline={progress:CCRN_STATE.normalizeProgress(remote.progress,allTopicNames),weak:CCRN_STATE.normalizeWeak(remote.weak),attempts:CCRN_STATE.normalizeAttempts(remote.attempts)};
+    }else cloudSync.baseline={progress:{},weak:{},attempts:[]};
+    // A retry must compare local edits with this accepted remote state, not
+    // count already merged remote records as new local changes on reload.
+    if(needsUpload)rememberPendingSync();
+    cloudSync.acknowledgedRevision=needsUpload?-1:connectingRevision;
+    if(!needsUpload)cloudSync.baseline=captureStudyState();
+    cloudSync.ready=true;
+    cloudSync.unsubscribe=cloudSync.onSnapshot(cloudSync.docRef,snap=>{
+      if(!cloudSync.ready || !snap.exists()) return;
+      if(cloudSync.saveTimer || cloudSync.saving || localRevision!==cloudSync.acknowledgedRevision)return;
+      try{applyCloudState(snap.data());cloudSync.baseline=captureStudyState();setSyncText('Synced');}
+      catch(e){cloudSync.ready=false;setSyncText(localSaveText()+' — invalid cloud data ignored');}
+    },()=>{
+      cloudSync.ready=false;
+      clearTimeout(cloudSync.saveTimer);cloudSync.saveTimer=null;
+      setSyncText(localSaveText()+' — cloud connection interrupted');
     });
-    setSyncText('Synced');
+    if(needsUpload)await saveCloudState();
+    else setSyncText('Synced');
   }catch(e){
-    setSyncText('Saved on this device');
+    cloudSync.ready=false;
+    clearTimeout(cloudSync.saveTimer);cloudSync.saveTimer=null;
+    setSyncText(localSaveText()+' — cloud unavailable');
   }
 }
 function escHtml(value){
@@ -1270,9 +1268,9 @@ function jsArg(value){
 function showView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v));
+  document.querySelectorAll('.tab').forEach(t=>{const active=t.dataset.view===v;t.classList.toggle('active',active);if(active)t.setAttribute('aria-current','page');else t.removeAttribute('aria-current');});
   if(v==='progress') renderProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
 }
 document.getElementById('tabs').addEventListener('click',e=>{
   if(e.target.classList.contains('tab')) showView(e.target.dataset.view);
@@ -1296,7 +1294,7 @@ function renderBlueprint(){
     <div class="bar-row">
       <div class="bar-name">${r.name.split(' / ')[0].length>26?r.name.slice(0,26)+'&hellip;':r.name}
         <small>${r.subs.length} subtopics${r.kind==='caring'?' &middot; ethics/practice':''}</small></div>
-      <div class="bar-track"><div class="bar-fill ${r.kind==='caring'?'pc':''}" style="width:${(r.hrs/maxHrs*100).toFixed(1)}%"></div></div>
+      <div class="bar-track"><div class="bar-fill ${r.kind==='caring'?'pc':''}" style="width:${(maxHrs?r.hrs/maxHrs*100:0).toFixed(1)}%"></div></div>
       <div class="bar-meta"><b>${r.hrs.toFixed(1)}h</b> <small>&middot; ${r.pct}%</small><br>
         <small>${(r.hrs/weeks).toFixed(1)}h/wk</small></div>
     </div>`).join('');
@@ -1328,12 +1326,12 @@ function subState(sub){
 function renderLibrary(){
   document.getElementById('libraryList').innerHTML=PLAN.map(sys=>`
     <div class="card">
-      <div class="sys-head" onclick="toggleSys(this)">
+      <button class="sys-head" onclick="toggleSys(this)" aria-expanded="false" aria-controls="library-${sys.id}">
         <span class="chev">&#9654;</span>
         <span class="sys-title">${sys.name}</span>
         <span class="sys-pct"><span class="pill ${sys.kind==='caring'?'plump':'tealp'}">${sys.pct}% of exam</span></span>
-      </div>
-      <div class="sys-body">
+      </button>
+      <div class="sys-body" id="library-${sys.id}">
         <div class="sub-grid">
           ${sys.subs.map(sub=>{
             const hasContent=!!CONTENT[sub];
@@ -1348,7 +1346,7 @@ function renderLibrary(){
       </div>
     </div>`).join('');
 }
-function toggleSys(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');}
+function toggleSys(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');el.setAttribute('aria-expanded',String(el.classList.contains('open')));}
 
 /* =====================================================================
    READER
@@ -1570,8 +1568,9 @@ function notesBox(sub){
   const p=progress[sub]||{};
   return `<h3>My study notes</h3>
     <div class="notes-box">
-      <textarea placeholder="Write your Barron's notes, weak points, memory hooks, or page references for ${escHtml(sub)}..." oninput="saveTopicNote('${jsArg(sub)}', this.value)">${escHtml(p.notes||'')}</textarea>
-      <div class="save-line"><span>Saved on this device as you type.</span><span id="noteStatus">Ready</span></div>
+      <label for="topicNotes">Personal study notes</label>
+      <textarea id="topicNotes" maxlength="100000" placeholder="Write your notes, weak points, memory hooks, or page references for ${escHtml(sub)}..." oninput="saveTopicNote('${jsArg(sub)}', this.value)">${escHtml(p.notes||'')}</textarea>
+      <div class="save-line"><span id="noteSaveMode">${escHtml(localSaveText())} as you type.</span><span id="noteStatus" aria-live="polite">Ready</span></div>
     </div>`;
 }
 function openReader(sub){
@@ -1582,12 +1581,15 @@ function openReader(sub){
     `<span class="pill ${sys.kind==='caring'?'plump':'tealp'}">${sys.name.split(' / ')[0]} &middot; ${sys.pct}%</span>`+
     (CONTENT[sub]&&CONTENT[sub].hy?' <span class="pill hy">&#9733; High-yield</span>':'');
   let body='';
-  if(CONTENT[sub]){
+  const withheld=['Diabetic ketoacidosis (DKA)','Dysrhythmias','Coagulopathies (DIC, ITP, HIT)'].includes(sub);
+  if(withheld){
+    body='<div class="review-notice"><b>Legacy clinical text withheld.</b> This section repeats outdated or incomplete guidance identified in the question audit. It requires a clinician-reviewed replacement. Your notes and progress remain available. <a href="docs/clinical-question-audit.md" target="_blank" rel="noopener">See evidence and proposed corrections</a>.</div>';
+  }else if(CONTENT[sub]){
     body=CONTENT[sub].html + deepDiveHtml(sub, sysId, true);
   } else {
     body=deepDiveHtml(sub, sysId, false);
   }
-  body += studyGuide(sysId, sub) + mediaCards(sysId);
+  if(!withheld)body='<div class="review-notice">Unreviewed library material: not clinically validated. Check claims with current primary guidance and a qualified educator. Linked search results are not reviewed references.</div>'+body+studyGuide(sysId, sub)+mediaCards(sysId);
   // progress checkboxes
   const p=progress[sub]||{chk:{}};
   const checkrow=`<div class="checkrow">${CHK_LABELS.map((l,i)=>`
@@ -1598,6 +1600,8 @@ function openReader(sub){
     `<h3 style="margin-top:24px">Track this topic</h3>`+checkrow+
     `<div style="margin-top:16px"><button class="nextbtn" onclick="quizThisSystem('${sysId}')">Quiz me on ${sys.name.split(' / ')[0]} &rarr;</button></div>`;
   showView('reader');
+  document.getElementById('rdTitle').tabIndex=-1;
+  document.getElementById('rdTitle').focus({preventScroll:true});
 }
 function saveTopicNote(sub, value){
   if(!progress[sub]) progress[sub]={chk:{}};
@@ -1605,10 +1609,11 @@ function saveTopicNote(sub, value){
   saveProgress();
   const status=document.getElementById('noteStatus');
   if(status){
-    status.textContent='Saved';
+    status.textContent=store.persistent?'Saved':'Session only';
     clearTimeout(status._t);
     status._t=setTimeout(()=>status.textContent='Ready',1200);
   }
+  document.getElementById('noteSaveMode').textContent=localSaveText()+' as you type.';
   renderLibrary();
 }
 function toggleChk(sub,i,el){
@@ -1631,16 +1636,24 @@ function quizThisSystem(sysId){
    ===================================================================== */
 let selectedSys=new Set(PLAN.map(s=>s.id));
 let quizLen=10, quiz=[], qIdx=0, qCorrect=0, qBySys={}, answered=false, quizMode='quiz';
+let sourceCheckedQuestions=[],clinicalGateReady=false;
+function reviewFor(q){return window.CCRN_CLINICAL_REVIEW?.questions?.find(item=>item.index===QBANK.indexOf(q));}
+async function initClinicalReview(){
+  clinicalGateReady=false;sourceCheckedQuestions=[];updateBankNote();
+  try{sourceCheckedQuestions=await CCRN_CLINICAL_GATE.eligibleQuestions(QBANK,window.CCRN_CLINICAL_REVIEW,window.crypto?.subtle);}catch(e){sourceCheckedQuestions=[];}
+  clinicalGateReady=true;updateBankNote();
+}
 
 function renderQuizChips(){
   document.getElementById('quizSysChips').innerHTML=
     `<span class="muted" style="font-size:13px;font-weight:600;margin-right:4px">Systems:</span>`+
-    PLAN.map(s=>`<button class="chip sys ${selectedSys.has(s.id)?'on':''}" data-sys="${s.id}">${s.name.split(' / ')[0]}</button>`).join('');
+    PLAN.map(s=>`<button class="chip sys ${selectedSys.has(s.id)?'on':''}" data-sys="${s.id}" aria-pressed="${selectedSys.has(s.id)}">${s.name.split(' / ')[0]}</button>`).join('');
   updateBankNote();
 }
 function updateBankNote(){
-  const avail=QBANK.filter(q=>selectedSys.has(q.sys)).length;
-  document.getElementById('qBankNote').textContent=`${avail} quiz questions available for your current selection. Practice Exam 1 and Practice Exam 2 each have 150 separate questions with no repeated stems from this quiz bank.`;
+  const avail=sourceCheckedQuestions.filter(q=>selectedSys.has(q.sys)).length;
+  document.getElementById('startQuiz').disabled=!clinicalGateReady || avail===0;
+  document.getElementById('qBankNote').textContent=clinicalGateReady?`${avail} source-checked questions available for this selection; ${QBANK.length-sourceCheckedQuestions.length} of ${QBANK.length} original questions withheld from quizzes. Both practice exams remain paused. Source comparison is not clinical expert approval.`:'Checking question evidence...';
 }
 document.getElementById('quizSysChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip.sys'); if(!b)return;
@@ -1648,10 +1661,12 @@ document.getElementById('quizSysChips').addEventListener('click',e=>{
   if(selectedSys.has(id)) selectedSys.delete(id); else selectedSys.add(id);
   if(selectedSys.size===0) selectedSys.add(id); // keep at least one
   b.classList.toggle('on',selectedSys.has(id));
+  b.setAttribute('aria-pressed',String(selectedSys.has(id)));
   updateBankNote();
 });
 document.querySelectorAll('.chip.len').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.chip.len').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.chip.len').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-pressed','false');});
+  b.setAttribute('aria-pressed','true');
   b.classList.add('on'); quizLen=parseInt(b.dataset.len);
 }));
 document.getElementById('startQuiz').addEventListener('click',startQuiz);
@@ -1659,10 +1674,11 @@ document.querySelectorAll('[data-exam]').forEach(b=>b.addEventListener('click',(
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function startQuiz(){
+  if(!clinicalGateReady){alert('Question evidence is still being checked.');return;}
   quizMode='quiz';
-  let pool=QBANK.filter(q=>selectedSys.has(q.sys));
+  let pool=sourceCheckedQuestions.filter(q=>selectedSys.has(q.sys));
   if(window.CCRN_ADAPTIVE_MODE){const misses=new Set(attempts.filter(a=>!a.correct).map(a=>a.stem));pool.sort((a,b)=>(misses.has(b.q)?1:0)-(misses.has(a.q)?1:0));}
-  if(pool.length===0){alert('No questions in the bank for that selection yet.');return;}
+  if(pool.length===0){alert('No source-checked questions are available for that selection. Other items are withheld pending review.');return;}
   pool=window.CCRN_ADAPTIVE_MODE?[...pool]:shuffle([...pool]);
   quiz = quizLen===0?pool:pool.slice(0,Math.min(quizLen,pool.length));
   qIdx=0;qCorrect=0;qBySys={};answered=false;
@@ -1696,7 +1712,9 @@ function renderQuestion(){
     `<button class="opt" data-i="${i}"><span class="ltr">${letters[i]}</span>${opt}</button>`).join('');
   document.querySelectorAll('#qOpts .opt').forEach(b=>b.addEventListener('click',()=>answer(parseInt(b.dataset.i))));
   document.getElementById('qRationale').className='rationale';
+  document.getElementById('qRationale').textContent='';
   document.getElementById('qNext').style.display='none';
+  document.getElementById('qStem').focus({preventScroll:true});
 }
 function answer(i){
   if(answered)return; answered=true;
@@ -1706,16 +1724,19 @@ function answer(i){
   opts.forEach(o=>o.disabled=true);
   opts[correct].classList.add('correct');
   const ok=(i===correct);
-  attempts.push({stem:q.q,topic:q.topic,sys:q.sys,correct:ok,at:new Date().toISOString(),mode:quizMode});
+  const itemReview=reviewFor(q);
+  attempts.push({questionId:itemReview?.id,contentVersion:window.CCRN_CLINICAL_REVIEW?.checkedOn,stem:q.q,topic:q.topic,sys:q.sys,correct:ok,at:new Date().toISOString(),mode:quizMode});
   if(attempts.length>5000)attempts=attempts.slice(-5000);
   if(ok){qCorrect++;} else {opts[i].classList.add('wrong'); weak[q.topic]=(weak[q.topic]||0)+1;}
   qBySys[q.sys]=qBySys[q.sys]||{c:0,t:0}; qBySys[q.sys].t++; if(ok)qBySys[q.sys].c++;
   saveProgress();
   const rat=document.getElementById('qRationale');
-  rat.innerHTML=`<div class="verdict ${ok?'ok':'no'}">${ok?'&#10003; Correct':'&#10007; Not quite'}</div>${q.r}`;
+  const citations=(itemReview?.references||[]).map(id=>window.CCRN_CLINICAL_REVIEW.references[id]).filter(ref=>ref&&/^https:\/\//.test(ref.url)).map(ref=>`<a href="${escHtml(ref.url)}" target="_blank" rel="noopener">${escHtml(ref.title)}</a>`).join('; ');
+  rat.innerHTML=`<div class="verdict ${ok?'ok':'no'}">${ok?'&#10003; Correct':'&#10007; Not quite'}</div>${q.r}<p class="muted">Source comparison: ${escHtml(itemReview?.id)} · ${escHtml(window.CCRN_CLINICAL_REVIEW?.checkedOn)}. ${citations}. No licensed clinical review.</p>`;
   rat.classList.add('show');
   document.getElementById('qNext').style.display='inline-block';
   document.getElementById('qNext').textContent = qIdx+1<quiz.length?'Next \u2192':'See results';
+  rat.focus({preventScroll:true});
 }
 document.getElementById('qNext').addEventListener('click',()=>{
   if(qIdx+1<quiz.length){qIdx++;renderQuestion();}
@@ -1727,6 +1748,7 @@ function showResults(){
   const pct=Math.round(qCorrect/quiz.length*100);
   const el=document.getElementById('rsScore');
   el.textContent=pct+'%';
+  el.focus({preventScroll:true});
   el.className='score '+(pct>=80?'pass':pct>=65?'near':'low');
   document.getElementById('rsSub').innerHTML=`${qCorrect} of ${quiz.length} correct &middot; `+
     'Practice score only; not a validated CCRN pass prediction.'+
@@ -1739,8 +1761,10 @@ function showResults(){
 function resetQuiz(){
   quizMode='quiz';
   document.getElementById('quizResults').style.display='none';
+  document.getElementById('quizRunner').style.display='none';
   document.getElementById('quizSetup').style.display='block';
   renderQuizChips();
+  document.getElementById('startQuiz').focus({preventScroll:true});
 }
 
 /* =====================================================================
@@ -1779,7 +1803,7 @@ function renderProgress(){
   document.getElementById('progBars').innerHTML=PLAN.map(s=>{
     const d=s.subs.filter(x=>subState(x)==='done').length;
     const pct=Math.round(d/s.subs.length*100);
-    return `<div class="bar-row" style="grid-template-columns:210px 1fr 70px">
+    return `<div class="bar-row progress-row">
       <div class="bar-name">${s.name.split(' / ')[0]}<small>${d}/${s.subs.length} complete</small></div>
       <div class="bar-track"><div class="bar-fill ${s.kind==='caring'?'pc':''}" style="width:${pct}%"></div></div>
       <div class="bar-meta"><b>${pct}%</b></div></div>`;
@@ -1788,7 +1812,7 @@ function renderProgress(){
   document.getElementById('weakList').innerHTML= weakEntries.length===0
     ? '<p class="muted" style="margin:0">Miss a quiz question and the topic shows up here.</p>'
     : `<div class="checkrow" style="margin:0">${weakEntries.map(([t,c])=>
-        `<span class="chk on" style="color:var(--coral);border-color:var(--coral)">${t} &middot; missed ${c}&times;</span>`).join('')}</div>`;
+        `<span class="chk on" style="color:var(--coral);border-color:var(--coral)">${escHtml(t)} &middot; missed ${c}&times;</span>`).join('')}</div>`;
 }
 
 /* =====================================================================
@@ -1816,6 +1840,8 @@ renderBlueprint();
 renderLibrary();
 renderQuizChips();
 renderVisualLibrary();
+document.querySelectorAll('.chip.len').forEach(b=>b.setAttribute('aria-pressed',String(b.classList.contains('on'))));
+initClinicalReview();
 initCloudSync();
 
 </script>

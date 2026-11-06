@@ -1,6 +1,8 @@
 // Optional Firebase sync for the Adult CCRN Study Hub.
 // Paste your Firebase web app config here if you want notes, progress,
-// and weak areas to sync across devices inside the Notion embed.
+// and weak areas to sync within the same anonymous browser identity.
+// Account-based cross-device identity is not implemented. Leave placeholders
+// for local-only use. Automated tests replace this file with synthetic config.
 window.CCRN_FIREBASE_CONFIG = {
   apiKey: "PASTE_API_KEY",
   authDomain: "PASTE_PROJECT.firebaseapp.com",
@@ -10,5 +12,5 @@ window.CCRN_FIREBASE_CONFIG = {
   appId: "PASTE_APP_ID"
 };
 
-// Firestore document used for the shared CCRN study hub state.
-window.CCRN_FIREBASE_DOC_PATH = "study/adult-ccrn-hub";
+// The adapter derives users/<authenticated uid>/study/adult-ccrn-hub.
+// No shared-document override or automatic legacy-data migration is supported.

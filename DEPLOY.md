@@ -1,11 +1,18 @@
 # Deploy Adult CCRN Study Hub to GitHub Pages + Notion
 
+**Draft only:** these are future setup instructions, not evidence of a deployment. This branch remains unmerged. Complete the clinical, identity and security review in `docs/clinical-review-process.md` before considering a separately authorized release. No production Firebase changes were made or tested.
+
 ## 1. Upload This Folder to GitHub
 
 Create a new GitHub repository, then upload the contents of this folder:
 
 - `index.html`
 - `firebase-config.js`
+- `study-state.js`
+- `clinical-gate.js`
+- `clinical-review.js`
+- `learning-lab.js`
+- `docs/` (the linked evidence reports)
 - `README.md`
 - `DEPLOY.md`
 - `.nojekyll`
@@ -38,7 +45,7 @@ The app will now be accessible anywhere Notion is available.
 
 ## Optional: Sync Notes and Progress Across Devices
 
-The app works immediately without Firebase, but notes and progress are saved per browser/device. Add Firebase if you want the same notes, checkmarks, and weak areas everywhere.
+The app works without Firebase; notes and progress are saved per browser/device. The current anonymous Firebase adapter is also tied to a browser identity. It does not solve cross-device access. Account-based sign-in, conflict resolution and migration require separate design and validation.
 
 ### Create Firebase Project
 
@@ -71,7 +78,7 @@ The app works immediately without Firebase, but notes and progress are saved per
 
 ### Firestore Rules
 
-Use rules like this for the single shared study document:
+The following owner-scoped example is documentation only. It has not been deployed or tested against a Firestore emulator in this PR. Validate authentication, authorization and field limits in a separately approved safe environment:
 
 ```js
 rules_version = '2';

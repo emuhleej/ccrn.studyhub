@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-06",
+  "command": "npm test",
+  "exitCode": 0,
+  "sourceBaseCommit": "d1e81ecb1b52d9211881a7eb8db5551d63f9ffdb",
+  "branch": "feature/ccrn-studyhub-improvements-20261106",
+  "environment": {
+    "os": "Windows x64",
+    "node": "v24.18.0",
+    "playwright": "1.62.1",
+    "chromiumBuild": "151.0.7922.34 (revision 1234)"
+  },
+  "unit": {
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "startTime": "2026-11-06T20:31:34.829Z",
+    "duration": 141332.18399999998,
+    "expected": 142,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scenarios": 71,
+  "projects": {
+    "desktop-chromium / app.spec.js": 15,
+    "mobile-chromium / app.spec.js": 15,
+    "desktop-chromium / clinical.spec.js": 5,
+    "mobile-chromium / clinical.spec.js": 5,
+    "desktop-chromium / firebase.spec.js": 22,
+    "mobile-chromium / firebase.spec.js": 22,
+    "desktop-chromium / learning-lab.spec.js": 29,
+    "mobile-chromium / learning-lab.spec.js": 29
+  },
+  "clinical": {
+    "originalQuestions": 33,
+    "sourceSupported": 15,
+    "quarantined": 18,
+    "fictionalStages": 4,
+    "licensedClinicalSignoffs": 0
+  },
+  "sha256OfApplicationFilesAfterLFNormalization": {
+    "index.html": "f2aaf8a4ef383f6f5a32b7d686892b37b50e251637592711cc37471f3dc7401d",
+    "firebase-config.js": "a1284af24501127ffc5bf1b50c8b6d17e9c55f625a87e3423725d0b8b4bbe6df",
+    "study-state.js": "9e5ef807c50dac9dd7dfe4c5e408abe687e110cf6355b27bb9a6dc32308692ca",
+    "clinical-gate.js": "3605c286259e6d17a3441a8e0b06a7949af38e68e38b02618fda6a61cc940415",
+    "clinical-review.js": "9e49465d2c30a32facb16dacdb4570e720fb45da7e67ce71c225604cb9edf0a1",
+    "learning-lab.js": "b1fdc77179e5fd38a2515b5515e8740ea5c9772f1937c5fe23437904ec670960"
+  }
+}
