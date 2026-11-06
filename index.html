@@ -400,12 +400,12 @@
       <div class="exam-grid">
         <div class="exam-card">
           <b>Practice Exam 1</b>
-          <p>150 original questions. Separate bank from quizzes and Exam 2.</p>
+          <p>Practice exam pending clinically reviewed questions.</p>
           <button class="startbtn" data-exam="exam1">Start Exam 1</button>
         </div>
         <div class="exam-card">
           <b>Practice Exam 2</b>
-          <p>150 original questions. Separate bank from quizzes and Exam 1.</p>
+          <p>Practice exam pending clinically reviewed questions.</p>
           <button class="startbtn" data-exam="exam2">Start Exam 2</button>
         </div>
       </div>
@@ -1088,7 +1088,7 @@ o:["Continue the current practice since it's the unit norm","Question the practi
 r:"Clinical Inquiry is the competency of questioning practice and using <b>evidence/EBP</b> to improve care &mdash; raising the concern and pursuing evidence-based change reflects it."}
 ];
 
-const QUESTION_TARGET = 100;
+const QUESTION_TARGET = 100; // Legacy template definitions retained for migration only; not used to generate scored exams.
 const QUESTION_STYLES = {
   cv:[
     {stem:'A patient is being evaluated for {topic}. Which nursing focus is most important first?', answer:'Assess perfusion, rhythm, blood pressure trend, and signs of ischemia before choosing the intervention.', distract:['Encourage oral fluids and reassess at the end of the shift.','Delay action until the next scheduled cardiac enzyme result.','Place the patient flat and reduce monitoring to promote rest.'], rationale:'Cardiovascular questions usually hinge on perfusion and stability. Rhythm, MAP, ischemic symptoms, urine output, mentation, and hemodynamic trends tell you whether this is a watch, treat, or call-now problem.'},
@@ -1663,7 +1663,7 @@ function startQuiz(){
   let pool=QBANK.filter(q=>selectedSys.has(q.sys));
   if(window.CCRN_ADAPTIVE_MODE){const misses=new Set(attempts.filter(a=>!a.correct).map(a=>a.stem));pool.sort((a,b)=>(misses.has(b.q)?1:0)-(misses.has(a.q)?1:0));}
   if(pool.length===0){alert('No questions in the bank for that selection yet.');return;}
-  pool=shuffle([...pool]);
+  pool=window.CCRN_ADAPTIVE_MODE?[...pool]:shuffle([...pool]);
   quiz = quizLen===0?pool:pool.slice(0,Math.min(quizLen,pool.length));
   qIdx=0;qCorrect=0;qBySys={};answered=false;
   document.getElementById('quizSetup').style.display='none';
@@ -1819,5 +1819,6 @@ renderVisualLibrary();
 initCloudSync();
 
 </script>
+<script src="learning-lab.js" defer></script>
 </body>
 </html>
