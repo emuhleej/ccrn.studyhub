@@ -1,0 +1,21 @@
+{
+  "name": "ccrn-studyhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser regression checks for the static Adult CCRN Study Hub",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test tests/*.test.cjs",
+    "test:e2e": "node tests/run-playwright.cjs test",
+    "test:desktop": "node tests/run-playwright.cjs test --project=desktop-chromium",
+    "test:mobile": "node tests/run-playwright.cjs test --project=mobile-chromium",
+    "test:report": "node tests/run-playwright.cjs show-report",
+    "test:server": "node tests/server.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
