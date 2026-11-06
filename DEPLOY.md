@@ -78,11 +78,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /study/adult-ccrn-hub {
-      allow read, write: if request.auth != null;
+    match /users/{userId}/study/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
 
-Anyone with the GitHub Pages link can open the app and anonymously sync to that shared document, so keep the link private-ish.
+Each anonymous Firebase user now writes to their own document. Anonymous identities may not persist across browsers or after storage is cleared. For dependable cross-device synchronization, implement account-based sign-in and a migration flow. Never publish permissive shared-document rules.
