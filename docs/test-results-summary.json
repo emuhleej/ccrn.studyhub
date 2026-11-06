@@ -48,5 +48,19 @@
     "clinical-gate.js": "3605c286259e6d17a3441a8e0b06a7949af38e68e38b02618fda6a61cc940415",
     "clinical-review.js": "9e49465d2c30a32facb16dacdb4570e720fb45da7e67ce71c225604cb9edf0a1",
     "learning-lab.js": "b1fdc77179e5fd38a2515b5515e8740ea5c9772f1937c5fe23437904ec670960"
+  },
+  "nativePickerFollowup": {
+    "reason": "Linux CI exposed native file input intrinsic width overflow; explicit zero minimum and bounded grid/input sizing added.",
+    "command": "npm run test:e2e -- tests/learning-lab.spec.js --grep learning controls|real download|current quiz provenance --workers=2",
+    "stats": {
+      "startTime": "2026-11-06T20:41:39.395Z",
+      "duration": 12328.797999999999,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "sourceParentCommit": "1d36085bf19c23108421e43640a0e4dd76d1ecc9",
+    "learningLabSha256AfterLFNormalization": "e05819be118fd77f4263d273a64d3189708f34f2cfe1d497692d0d85214df35a"
   }
 }

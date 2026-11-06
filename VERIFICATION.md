@@ -17,7 +17,7 @@ Unsupported originals remain in source for review, excluded from learner quizzes
 
 ## Executed software checks
 
-Final command: **`npm test` exited 0** on 2026-11-06T20:31:34.829Z. **11 unit checks and 142 browser checks passed**, with zero failures, skips or flaky results and no retries. Browser duration: 141.3 seconds. Environment: Windows x64, Node v24.18.0, Playwright 1.62.1, bundled Chromium 151.0.7922.34.
+Consolidated Windows command (before the native-picker CSS follow-up below): **`npm test` exited 0** on 2026-11-06T20:31:34.829Z. **11 unit checks and 142 browser checks passed**, with zero failures, skips or flaky results and no retries. Browser duration: 141.3 seconds. Environment: Windows x64, Node v24.18.0, Playwright 1.62.1, bundled Chromium 151.0.7922.34.
 
 | Browser suite | Desktop | Mobile |
 | --- | ---: | ---: |
@@ -60,3 +60,7 @@ Real original-app failures were recorded before repairs. One early system-select
 - Source currency was checked on the audit date, without continuous monitoring or a comprehensive systematic review. Inaccessible primary full texts are identified in the evidence register.
 
 The GitHub workflow runs unit/browser checks with read-only repository permissions and uploads reports. It has no merge or deployment step. Remote CI execution status is separate from a local pass.
+
+## Cross-platform CI follow-up
+
+The first Ubuntu CI run at commit 1d36085 passed 11 unit checks and 141 browser checks, but failed the mobile backup file-picker containment assertion (right edge 352 px versus a 309 px panel bound). This was a real native-control sizing difference from Windows. Explicit input width/minimum width and a bounded grid track correct it; the existing assertion is unchanged. Six targeted Windows layout, download and import checks then passed with no skips/retries. The final Linux rerun must be assessed independently of that local result. [Original failing CI run](https://github.com/emuhleej/ccrn.studyhub/actions/runs/42289936922).
