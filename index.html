@@ -1153,13 +1153,7 @@ function makeGeneratedQuestions(bankLabel, target, used){
 }
 
 const usedQuestionStems = new Set(QBANK.map(q=>q.q));
-if(QBANK.length<QUESTION_TARGET){
-  QBANK.push(...makeGeneratedQuestions('Quiz bank', QUESTION_TARGET-QBANK.length, usedQuestionStems));
-}
-const PRACTICE_EXAMS = {
-  exam1: makeGeneratedQuestions('Practice Exam 1', 150, usedQuestionStems),
-  exam2: makeGeneratedQuestions('Practice Exam 2', 150, usedQuestionStems)
-};
+const PRACTICE_EXAMS = { exam1: [], exam2: [] }; // Awaiting clinically reviewed banks.
 
 /* =====================================================================
    STATE + PERSISTENCE  (localStorage where available; degrades to memory)
@@ -1173,11 +1167,13 @@ const store = (()=>{
   };
 })();
 let progress = store.get('ccrn_progress', {}); // {subtopic: {chk:{}, }}
-let weak = store.get('ccrn_weak', {});          // {topic: count}
+let weak = store.get('ccrn_weak', {});
+let attempts = store.get('ccrn_attempts', []);          // {topic: count}
 let cloudSync = { ready:false, docRef:null, setDoc:null, onSnapshot:null, serverTimestamp:null, saveTimer:null, applying:false };
 function saveProgress(){
   store.set('ccrn_progress',progress);
   store.set('ccrn_weak',weak);
+  store.set('ccrn_attempts',attempts);
   scheduleCloudSave();
 }
 function hasCloudConfig(){
@@ -1199,6 +1195,7 @@ async function saveCloudState(){
     await cloudSync.setDoc(cloudSync.docRef,{
       progress,
       weak,
+      attempts,
       updatedAt:cloudSync.serverTimestamp()
     },{merge:true});
     setSyncText('Synced');
@@ -1220,7 +1217,7 @@ async function initCloudSync(){
     const auth=authMod.getAuth(app);
     await authMod.signInAnonymously(auth);
     const db=fireMod.getFirestore(app);
-    const path=(window.CCRN_FIREBASE_DOC_PATH||'study/adult-ccrn-hub').split('/');
+    const path=['users',auth.currentUser.uid,'study','adult-ccrn-hub'];
     cloudSync={...cloudSync,ready:true,docRef:fireMod.doc(db,...path),setDoc:fireMod.setDoc,onSnapshot:fireMod.onSnapshot,serverTimestamp:fireMod.serverTimestamp};
     const snap=await fireMod.getDoc(cloudSync.docRef);
     if(snap.exists()){
@@ -1228,8 +1225,10 @@ async function initCloudSync(){
       cloudSync.applying=true;
       progress=data.progress||progress||{};
       weak=data.weak||weak||{};
+      attempts=Array.isArray(data.attempts)?data.attempts:attempts;
       store.set('ccrn_progress',progress);
       store.set('ccrn_weak',weak);
+      store.set('ccrn_attempts',attempts);
       cloudSync.applying=false;
       renderLibrary();
       renderQuizChips();
@@ -1242,8 +1241,10 @@ async function initCloudSync(){
       cloudSync.applying=true;
       progress=data.progress||{};
       weak=data.weak||{};
+      attempts=Array.isArray(data.attempts)?data.attempts:attempts;
       store.set('ccrn_progress',progress);
       store.set('ccrn_weak',weak);
+      store.set('ccrn_attempts',attempts);
       cloudSync.applying=false;
       renderLibrary();
       if(document.getElementById('view-progress').classList.contains('active')) renderProgress();
@@ -1660,6 +1661,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function startQuiz(){
   quizMode='quiz';
   let pool=QBANK.filter(q=>selectedSys.has(q.sys));
+  if(window.CCRN_ADAPTIVE_MODE){const misses=new Set(attempts.filter(a=>!a.correct).map(a=>a.stem));pool.sort((a,b)=>(misses.has(b.q)?1:0)-(misses.has(a.q)?1:0));}
   if(pool.length===0){alert('No questions in the bank for that selection yet.');return;}
   pool=shuffle([...pool]);
   quiz = quizLen===0?pool:pool.slice(0,Math.min(quizLen,pool.length));
@@ -1672,7 +1674,7 @@ function startQuiz(){
 function startExam(examId){
   quizMode=examId;
   const pool=PRACTICE_EXAMS[examId]||[];
-  if(pool.length===0){alert('That practice exam is not available yet.');return;}
+  if(pool.length===0){alert('Practice exams are paused pending independent clinical review. Topic quizzes are for learning, not pass predictions.');return;}
   quiz=[...pool];
   qIdx=0;qCorrect=0;qBySys={};answered=false;
   document.getElementById('quizSetup').style.display='none';
@@ -1704,6 +1706,8 @@ function answer(i){
   opts.forEach(o=>o.disabled=true);
   opts[correct].classList.add('correct');
   const ok=(i===correct);
+  attempts.push({stem:q.q,topic:q.topic,sys:q.sys,correct:ok,at:new Date().toISOString(),mode:quizMode});
+  if(attempts.length>5000)attempts=attempts.slice(-5000);
   if(ok){qCorrect++;} else {opts[i].classList.add('wrong'); weak[q.topic]=(weak[q.topic]||0)+1;}
   qBySys[q.sys]=qBySys[q.sys]||{c:0,t:0}; qBySys[q.sys].t++; if(ok)qBySys[q.sys].c++;
   saveProgress();
@@ -1725,7 +1729,7 @@ function showResults(){
   el.textContent=pct+'%';
   el.className='score '+(pct>=80?'pass':pct>=65?'near':'low');
   document.getElementById('rsSub').innerHTML=`${qCorrect} of ${quiz.length} correct &middot; `+
-    (pct>=80?'Passing range &mdash; keep this up.':pct>=65?'Close. Drill the misses below.':'Early days &mdash; the misses are your study list.')+
+    'Practice score only; not a validated CCRN pass prediction.'+
     (quizMode==='quiz'?'':`<br><span class="dim">${quizMode==='exam1'?'Practice Exam 1':'Practice Exam 2'} used a dedicated 150-question bank.</span>`);
   document.getElementById('rsBreak').innerHTML=Object.keys(qBySys).map(sid=>{
     const s=PLAN.find(x=>x.id===sid), d=qBySys[sid];
@@ -1760,6 +1764,7 @@ function renderVisualLibrary(){
    PROGRESS
    ===================================================================== */
 function renderProgress(){
+  renderLearningInsights();
   const allSubs=PLAN.flatMap(s=>s.subs);
   const started=allSubs.filter(s=>subState(s)!=='').length;
   const done=allSubs.filter(s=>subState(s)==='done').length;
@@ -1789,6 +1794,24 @@ function renderProgress(){
 /* =====================================================================
    INIT
    ===================================================================== */
+function renderLearningInsights(){
+  const host=document.getElementById('ccrnLearningInsights');if(!host)return;
+  const groups={};attempts.forEach(a=>{const x=groups[a.sys]||(groups[a.sys]={right:0,total:0});x.total++;if(a.correct)x.right++;});
+  const rows=Object.entries(groups).map(([id,v])=>'<li>'+escHtml((PLAN.find(x=>x.id===id)||{}).name||id)+': '+v.right+'/'+v.total+' ('+Math.round(v.right/v.total*100)+'%)</li>').join('');
+  const recent=attempts.slice(-30);const accuracy=recent.length?Math.round(recent.filter(a=>a.correct).length/recent.length*100):0;
+  const missed=Object.entries(weak).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+  host.innerHTML='<h2>Learning insights</h2><p>'+attempts.length+' recorded answers · last 30 accuracy: '+(recent.length?accuracy+'%':'not yet available')+'</p><ul>'+(rows||'<li>Complete a quiz to begin tracking.</li>')+'</ul><h3>Study coach</h3><p>'+(missed.length?'Review: '+missed.map(escHtml).join(', '):'Start a topic quiz to identify weak areas.')+'</p><p class="muted">Learning guidance only. Scores are not a CCRN pass prediction.</p>';
+}
+window.CCRN_ADAPTIVE_MODE=false;
+function addLearningTools(){
+ const progressView=document.getElementById('view-progress');if(!progressView)return;
+ const panel=document.createElement('div');panel.className='card';panel.style.marginTop='16px';
+ panel.innerHTML='<label><input id="adaptiveToggle" type="checkbox"> Prioritize previously missed questions in topic quizzes</label><p class="muted">Simple adaptive ordering, not validated spaced repetition.</p><div id="ccrnLearningInsights"></div>';
+ progressView.appendChild(panel);
+ document.getElementById('adaptiveToggle').addEventListener('change',e=>window.CCRN_ADAPTIVE_MODE=e.target.checked);
+ renderLearningInsights();
+}
+addLearningTools();
 renderBlueprint();
 renderLibrary();
 renderQuizChips();
